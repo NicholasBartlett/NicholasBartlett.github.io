@@ -35,8 +35,8 @@ plugins:
   - jekyll-feed
 
 # Other things I added:
-theme: cayman
-usemathjax: true
+theme: Cayman
+#usemathjax: true
 
 # Exclude from processing.
 # The following items will not be processed, by default.
