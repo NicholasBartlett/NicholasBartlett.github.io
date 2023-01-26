@@ -35,7 +35,7 @@ plugins:
   - jekyll-feed
 
 # Other things I added:
-theme: Cayman
+remote_theme: pages-themes/cayman@v0.2.0
 #usemathjax: true
 
 # Exclude from processing.
