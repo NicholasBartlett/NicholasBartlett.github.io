@@ -30,11 +30,12 @@ twitter_username: TBD
 github_username:  NicholasBartlett
 
 # Build settings
-remote_theme: pages-themes/cayman@v0.2.0
+# remote_theme: pages-themes/cayman@v0.2.0
+theme: minima
 plugins:
-  - jekyll-remote-theme
+#  - jekyll-remote-theme
   - jekyll-feed
-#usemathjax: true
+# usemathjax: true
 
 # Exclude from processing.
 # The following items will not be processed, by default.
