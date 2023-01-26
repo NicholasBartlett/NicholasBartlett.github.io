@@ -9,6 +9,11 @@ food: Pizza
 ## Hello, world!
 *Testing* __the__ markdown.
 
-The variable food has been set to <h1>{{ page.food }}</h1>
+The variable food has ~~not~~ been set to: {{ page.food }}.
 
-$$R^2$$
+```python
+def func(x):
+  return x + 1
+```
+
+$R^2$
