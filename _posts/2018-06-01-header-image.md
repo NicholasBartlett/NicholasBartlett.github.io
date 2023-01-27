@@ -9,4 +9,6 @@ article_header:
 
 A Post with Header Image, See [Page layout](https://kitian616.github.io/jekyll-TeXt-theme/samples.html#page-layout) for more examples.
 
+Here is math: $$x^2=1$$.
+
 <!--more-->
