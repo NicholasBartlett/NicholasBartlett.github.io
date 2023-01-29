@@ -1,0 +1,74 @@
+---
+layout: base
+header: false
+full_width: true
+permalink: /test
+---
+
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Webpage</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+  <style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        }
+    
+    .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        }
+
+    .title {
+        font-size: 36px;
+        display: flex;
+        flex-direction: column; /* stack the elements vertically*/
+        align-items: center; /* center the elements horizontally */
+        justify-content: center; /* center the elements vertically */
+        }
+
+    .button-container {
+        display: flex;
+        justify-content: center;
+        }
+
+    .button {
+        height: 100px;
+        width: 100px;
+        margin: 50px;
+        border-radius: 10%;
+        transition: all 0.5s ease;
+        }
+
+    .button:hover {
+        background-color: #000000;
+        transform: scale(1.1);
+        box-shadow: 0px 0px 100px #ccc; /* this will add a shadow around the button when hovered over */
+        opacity: 1; /* this will make the button slightly transparent when hovered over */
+        }
+
+
+
+  </style>
+</head>
+<body>
+    <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="300" zoomAndPan="magnify" viewBox="0 0 375 374.999991" height="300" preserveAspectRatio="xMidYMid meet" version="1.0"><defs><g/></defs><g fill="#000000" fill-opacity="1"><g transform="translate(26.375603, 311.99998)"><g><path d="M 165.5 -199.996094 L 133.25 -199.996094 C 131.5 -199.996094 130.25 -198.746094 130.25 -197.746094 L 130.25 -67.5 L 38 -199.246094 C 37.75 -199.746094 36.25 -199.996094 35.75 -199.996094 L 2.5 -199.996094 C 1.25 -199.996094 0 -198.746094 0 -197.746094 L 0 -48 L 38.25 -48 L 38.25 -132.5 L 130.25 -0.75 C 130.5 -0.25 132 0 132.5 0 L 165.5 0 C 167.25 0 168.25 -1.25 168.25 -2.25 L 168.25 -197.746094 C 168.25 -198.746094 167.25 -199.996094 165.5 -199.996094 Z M 165.5 -199.996094 "/></g></g></g><g fill="#000000" fill-opacity="1"><g transform="translate(203.123524, 311.99998)"><g><path d="M 97.5 -140.5 C 97.5 -118.5 68 -118.5 68 -118.5 L 38 -118.5 L 38 -164.25 L 68 -164.25 C 68 -164.25 97.5 -164.5 97.5 -140.5 Z M 135.75 -142.75 C 135.75 -201.496094 68 -199.996094 68 -199.996094 L 2.75 -199.996094 C 1.25 -199.996094 0 -198.746094 0 -197.746094 L 0 -81.25 L 68 -81.25 C 68 -81.25 100.25 -82.75 100.25 -59.25 C 100.25 -40 80.5 -36.5 68 -36.5 L 38.25 -36.5 L 38.25 0 L 68 0 C 81.5 0 138.5 -2.5 138.5 -58.25 C 138.5 -58.25 139.75 -89.25 108 -100 C 123.25 -106.25 135.75 -119.5 135.75 -142.75 Z M 135.75 -142.75 "/></g></g></g></svg>
+    </div>
+    
+    <h1 class="title">Nicholas Bartlett</h1>
+
+  <div class="button-container">
+    <a href="/blog"><img src="screenshot.jpg" alt="Button 1" class="button"></a>
+    <a href="/projects"><img src="screenshot.jpg" alt="Button 2" class="button"></a>
+    <a href="/about"><img src="screenshot.jpg" alt="Button 3" class="button"></a>
+  </div>
+
+</body>
+</html>

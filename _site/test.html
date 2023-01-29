@@ -1,0 +1,339 @@
+<!DOCTYPE html><html lang="en">
+  <head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"><title>Nicholas Bartlett</title>
+
+<meta name="description" content="On this site you can expect to find detailed posts that aim to teach as well as any random thoughts I think worthy of sharing -- hopefully both are useful and interesting!
+">
+<link rel="canonical" href="http://localhost:4000/test"><link rel="alternate" type="application/rss+xml" title="Nicholas Bartlett" href="/feed.xml"><link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+<link rel="manifest" href="/assets/site.webmanifest">
+<link rel="mask-icon" href="/assets/safari-pinned-tab.svg" color="#5bbad5">
+<link rel="shortcut icon" href="/assets/favicon.ico">
+<meta name="msapplication-TileColor" content="#da532c">
+<meta name="msapplication-config" content="/assets/browserconfig.xml">
+<meta name="theme-color" content="#ffffff"><link rel="stylesheet" href="/assets/css/main.css"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/all.css" ><!-- start custom head snippets -->
+
+<!-- end custom head snippets -->
+<script>(function() {
+  window.isArray = function(val) {
+    return Object.prototype.toString.call(val) === '[object Array]';
+  };
+  window.isString = function(val) {
+    return typeof val === 'string';
+  };
+
+  window.hasEvent = function(event) {
+    return 'on'.concat(event) in window.document;
+  };
+
+  window.isOverallScroller = function(node) {
+    return node === document.documentElement || node === document.body || node === window;
+  };
+
+  window.isFormElement = function(node) {
+    var tagName = node.tagName;
+    return tagName === 'INPUT' || tagName === 'SELECT' || tagName === 'TEXTAREA';
+  };
+
+  window.pageLoad = (function () {
+    var loaded = false, cbs = [];
+    window.addEventListener('load', function () {
+      var i;
+      loaded = true;
+      if (cbs.length > 0) {
+        for (i = 0; i < cbs.length; i++) {
+          cbs[i]();
+        }
+      }
+    });
+    return {
+      then: function(cb) {
+        cb && (loaded ? cb() : (cbs.push(cb)));
+      }
+    };
+  })();
+})();
+(function() {
+  window.throttle = function(func, wait) {
+    var args, result, thisArg, timeoutId, lastCalled = 0;
+
+    function trailingCall() {
+      lastCalled = new Date;
+      timeoutId = null;
+      result = func.apply(thisArg, args);
+    }
+    return function() {
+      var now = new Date,
+        remaining = wait - (now - lastCalled);
+
+      args = arguments;
+      thisArg = this;
+
+      if (remaining <= 0) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+        lastCalled = now;
+        result = func.apply(thisArg, args);
+      } else if (!timeoutId) {
+        timeoutId = setTimeout(trailingCall, remaining);
+      }
+      return result;
+    };
+  };
+})();
+(function() {
+  var Set = (function() {
+    var add = function(item) {
+      var i, data = this._data;
+      for (i = 0; i < data.length; i++) {
+        if (data[i] === item) {
+          return;
+        }
+      }
+      this.size ++;
+      data.push(item);
+      return data;
+    };
+
+    var Set = function(data) {
+      this.size = 0;
+      this._data = [];
+      var i;
+      if (data.length > 0) {
+        for (i = 0; i < data.length; i++) {
+          add.call(this, data[i]);
+        }
+      }
+    };
+    Set.prototype.add = add;
+    Set.prototype.get = function(index) { return this._data[index]; };
+    Set.prototype.has = function(item) {
+      var i, data = this._data;
+      for (i = 0; i < data.length; i++) {
+        if (this.get(i) === item) {
+          return true;
+        }
+      }
+      return false;
+    };
+    Set.prototype.is = function(map) {
+      if (map._data.length !== this._data.length) { return false; }
+      var i, j, flag, tData = this._data, mData = map._data;
+      for (i = 0; i < tData.length; i++) {
+        for (flag = false, j = 0; j < mData.length; j++) {
+          if (tData[i] === mData[j]) {
+            flag = true;
+            break;
+          }
+        }
+        if (!flag) { return false; }
+      }
+      return true;
+    };
+    Set.prototype.values = function() {
+      return this._data;
+    };
+    return Set;
+  })();
+
+  window.Lazyload = (function(doc) {
+    var queue = {js: [], css: []}, sources = {js: {}, css: {}}, context = this;
+    var createNode = function(name, attrs) {
+      var node = doc.createElement(name), attr;
+      for (attr in attrs) {
+        if (attrs.hasOwnProperty(attr)) {
+          node.setAttribute(attr, attrs[attr]);
+        }
+      }
+      return node;
+    };
+    var end = function(type, url) {
+      var s, q, qi, cbs, i, j, cur, val, flag;
+      if (type === 'js' || type ==='css') {
+        s = sources[type], q = queue[type];
+        s[url] = true;
+        for (i = 0; i < q.length; i++) {
+          cur = q[i];
+          if (cur.urls.has(url)) {
+            qi = cur, val = qi.urls.values();
+            qi && (cbs = qi.callbacks);
+            for (flag = true, j = 0; j < val.length; j++) {
+              cur = val[j];
+              if (!s[cur]) {
+                flag = false;
+              }
+            }
+            if (flag && cbs && cbs.length > 0) {
+              for (j = 0; j < cbs.length; j++) {
+                cbs[j].call(context);
+              }
+              qi.load = true;
+            }
+          }
+        }
+      }
+    };
+    var load = function(type, urls, callback) {
+      var s, q, qi, node, i, cur,
+        _urls = typeof urls === 'string' ? new Set([urls]) : new Set(urls), val, url;
+      if (type === 'js' || type ==='css') {
+        s = sources[type], q = queue[type];
+        for (i = 0; i < q.length; i++) {
+          cur = q[i];
+          if (_urls.is(cur.urls)) {
+            qi = cur;
+            break;
+          }
+        }
+        val = _urls.values();
+        if (qi) {
+          callback && (qi.load || qi.callbacks.push(callback));
+          callback && (qi.load && callback());
+        } else {
+          q.push({
+            urls: _urls,
+            callbacks: callback ? [callback] : [],
+            load: false
+          });
+          for (i = 0; i < val.length; i++) {
+            node = null, url = val[i];
+            if (s[url] === undefined) {
+              (type === 'js' ) && (node = createNode('script', { src: url }));
+              (type === 'css') && (node = createNode('link', { rel: 'stylesheet', href: url }));
+              if (node) {
+                node.onload = (function(type, url) {
+                  return function() {
+                    end(type, url);
+                  };
+                })(type, url);
+                (doc.head || doc.body).appendChild(node);
+                s[url] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+    return {
+      js: function(url, callback) {
+        load('js', url, callback);
+      },
+      css: function(url, callback) {
+        load('css', url, callback);
+      }
+    };
+  })(this.document);
+})();
+</script><script>
+  (function() {
+    var TEXT_VARIABLES = {
+      version: '2.2.6',
+      sources: {
+        font_awesome: 'https://use.fontawesome.com/releases/v5.15.1/css/all.css',
+        jquery: 'https://unpkg.com/jquery@3.3.1/dist/jquery.min.js',
+        leancloud_js_sdk: '//cdn.jsdelivr.net/npm/leancloud-storage@3.13.2/dist/av-min.js',
+        chart: 'https://unpkg.com/chart.js@2.7.2/dist/Chart.min.js',
+        gitalk: {
+          js: 'https://unpkg.com/gitalk@1.2.2/dist/gitalk.min.js',
+          css: 'https://unpkg.com/gitalk@1.2.2/dist/gitalk.css'
+        },
+        valine: 'https//unpkg.com/valine/dist/Valine.min.js',
+        mathjax: 'https://unpkg.com/mathjax@2.7.4/unpacked/MathJax.js?config=TeX-MML-AM_CHTML',
+        mermaid: 'https://unpkg.com/mermaid@8.0.0-rc.8/dist/mermaid.min.js'
+      },
+      site: {
+        toc: {
+          selectors: 'h1,h2,h3'
+        }
+      },
+      paths: {
+        search_js: '/assets/search.js'
+      }
+    };
+    window.TEXT_VARIABLES = TEXT_VARIABLES;
+  })();
+</script>
+</head>
+  <body>
+    <div class="root" data-is-touch="false">
+      <!DOCTYPE html>
+<html>
+<head>
+  <title>My Webpage</title>
+  <link rel="stylesheet" type="text/css" href="styles.css">
+  <style>
+    body {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        flex-direction: column;
+        }
+    
+    .logo {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        }
+
+    .title {
+        font-size: 36px;
+        display: flex;
+        flex-direction: column; /* stack the elements vertically*/
+        align-items: center; /* center the elements horizontally */
+        justify-content: center; /* center the elements vertically */
+        }
+
+    .button-container {
+        display: flex;
+        justify-content: center;
+        }
+
+    .button {
+        height: 100px;
+        width: 100px;
+        margin: 50px;
+        border-radius: 10%;
+        transition: all 0.5s ease;
+        }
+
+    .button:hover {
+        background-color: #000000;
+        transform: scale(1.1);
+        box-shadow: 0px 0px 100px #ccc; /* this will add a shadow around the button when hovered over */
+        opacity: 1; /* this will make the button slightly transparent when hovered over */
+        }
+
+
+
+  </style>
+</head>
+<body>
+    <div class="logo">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="300" zoomAndPan="magnify" viewBox="0 0 375 374.999991" height="300" preserveAspectRatio="xMidYMid meet" version="1.0"><defs><g/></defs><g fill="#000000" fill-opacity="1"><g transform="translate(26.375603, 311.99998)"><g><path d="M 165.5 -199.996094 L 133.25 -199.996094 C 131.5 -199.996094 130.25 -198.746094 130.25 -197.746094 L 130.25 -67.5 L 38 -199.246094 C 37.75 -199.746094 36.25 -199.996094 35.75 -199.996094 L 2.5 -199.996094 C 1.25 -199.996094 0 -198.746094 0 -197.746094 L 0 -48 L 38.25 -48 L 38.25 -132.5 L 130.25 -0.75 C 130.5 -0.25 132 0 132.5 0 L 165.5 0 C 167.25 0 168.25 -1.25 168.25 -2.25 L 168.25 -197.746094 C 168.25 -198.746094 167.25 -199.996094 165.5 -199.996094 Z M 165.5 -199.996094 "/></g></g></g><g fill="#000000" fill-opacity="1"><g transform="translate(203.123524, 311.99998)"><g><path d="M 97.5 -140.5 C 97.5 -118.5 68 -118.5 68 -118.5 L 38 -118.5 L 38 -164.25 L 68 -164.25 C 68 -164.25 97.5 -164.5 97.5 -140.5 Z M 135.75 -142.75 C 135.75 -201.496094 68 -199.996094 68 -199.996094 L 2.75 -199.996094 C 1.25 -199.996094 0 -198.746094 0 -197.746094 L 0 -81.25 L 68 -81.25 C 68 -81.25 100.25 -82.75 100.25 -59.25 C 100.25 -40 80.5 -36.5 68 -36.5 L 38.25 -36.5 L 38.25 0 L 68 0 C 81.5 0 138.5 -2.5 138.5 -58.25 C 138.5 -58.25 139.75 -89.25 108 -100 C 123.25 -106.25 135.75 -119.5 135.75 -142.75 Z M 135.75 -142.75 "/></g></g></g></svg>
+    </div>
+    
+    <h1 class="title">Nicholas Bartlett</h1>
+
+  <div class="button-container">
+    <a href="/blog"><img src="screenshot.jpg" alt="Button 1" class="button"></a>
+    <a href="/projects"><img src="screenshot.jpg" alt="Button 2" class="button"></a>
+    <a href="/about"><img src="screenshot.jpg" alt="Button 3" class="button"></a>
+  </div>
+
+</body>
+</html>
+    </div>
+    <script>(function () {
+  var $root = document.getElementsByClassName('root')[0];
+  if (window.hasEvent('touchstart')) {
+    $root.dataset.isTouch = true;
+    document.addEventListener('touchstart', function(){}, false);
+  }
+})();
+</script>
+  </body>
+</html>
+
