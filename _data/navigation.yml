@@ -1,4 +1,11 @@
 header:
+  - title: Blog
+    url: /blog
+
+  - title: Projects
+    url: /projects
+
+  
   - titles:
       # @start locale config
       en      : &EN       Archive
@@ -50,3 +57,9 @@ header:
       tr      : &TR       Hakkında
       # @end locale config
     url: /about.html
+
+blog-sidebar:
+  - title: Blogs
+    children:
+
+

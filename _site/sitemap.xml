@@ -1,12 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
-<loc>http://localhost:4000/2018/06/01/header-image.html</loc>
-<lastmod>2018-06-01T00:00:00-05:00</lastmod>
+<loc>http://localhost:4000/2023/01/27/log-returns.html</loc>
+<lastmod>2023-01-27T00:00:00-06:00</lastmod>
 </url>
 <url>
-<loc>http://localhost:4000/2018/07/01/welcome.html</loc>
-<lastmod>2018-07-01T00:00:00-05:00</lastmod>
+<loc>http://localhost:4000/2023/01/27/portfolio-markowitz.html</loc>
+<lastmod>2023-01-27T00:00:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://localhost:4000/2023/01/27/sports-arb-linprog.html</loc>
+<lastmod>2023-01-27T00:00:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://localhost:4000/2023/01/27/sports-arb-simple.html</loc>
+<lastmod>2023-01-27T00:00:00-06:00</lastmod>
+</url>
+<url>
+<loc>http://localhost:4000/2023/01/27/test-page.html</loc>
+<lastmod>2023-01-27T00:00:00-06:00</lastmod>
 </url>
 <url>
 <loc>http://localhost:4000/about.html</loc>
@@ -15,6 +27,15 @@
 <loc>http://localhost:4000/archive.html</loc>
 </url>
 <url>
+<loc>http://localhost:4000/blog</loc>
+</url>
+<url>
+<loc>http://localhost:4000/test</loc>
+</url>
+<url>
 <loc>http://localhost:4000/</loc>
+</url>
+<url>
+<loc>http://localhost:4000/projects</loc>
 </url>
 </urlset>
