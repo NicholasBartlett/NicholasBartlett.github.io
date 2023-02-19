@@ -1,0 +1,1261 @@
+<!DOCTYPE html><html lang="en">
+  <head><meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"><title>Sports-Betting Arbitrage: Complex Arbitrage Through Linear Programming - Nicholas Bartlett</title>
+
+<meta name="description" content="Basic arbitrage is remarkably difficult to find in sports markets these days. More complex arbitrage strategies, however, are more prevalent. This article bu...">
+<link rel="canonical" href="http://localhost:4000/sports-arb-linprog"><link rel="alternate" type="application/rss+xml" title="Nicholas Bartlett" href="/feed.xml"><link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+<link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+<link rel="manifest" href="/assets/site.webmanifest">
+<link rel="mask-icon" href="/assets/safari-pinned-tab.svg" color="#5bbad5">
+<link rel="shortcut icon" href="/assets/favicon.ico">
+<meta name="msapplication-TileColor" content="#da532c">
+<meta name="msapplication-config" content="/assets/browserconfig.xml">
+<meta name="theme-color" content="#ffffff"><link rel="stylesheet" href="/assets/css/main.css"><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.15.1/css/all.css" ><!-- start custom head snippets -->
+
+<!-- end custom head snippets -->
+<script>(function() {
+  window.isArray = function(val) {
+    return Object.prototype.toString.call(val) === '[object Array]';
+  };
+  window.isString = function(val) {
+    return typeof val === 'string';
+  };
+
+  window.hasEvent = function(event) {
+    return 'on'.concat(event) in window.document;
+  };
+
+  window.isOverallScroller = function(node) {
+    return node === document.documentElement || node === document.body || node === window;
+  };
+
+  window.isFormElement = function(node) {
+    var tagName = node.tagName;
+    return tagName === 'INPUT' || tagName === 'SELECT' || tagName === 'TEXTAREA';
+  };
+
+  window.pageLoad = (function () {
+    var loaded = false, cbs = [];
+    window.addEventListener('load', function () {
+      var i;
+      loaded = true;
+      if (cbs.length > 0) {
+        for (i = 0; i < cbs.length; i++) {
+          cbs[i]();
+        }
+      }
+    });
+    return {
+      then: function(cb) {
+        cb && (loaded ? cb() : (cbs.push(cb)));
+      }
+    };
+  })();
+})();
+(function() {
+  window.throttle = function(func, wait) {
+    var args, result, thisArg, timeoutId, lastCalled = 0;
+
+    function trailingCall() {
+      lastCalled = new Date;
+      timeoutId = null;
+      result = func.apply(thisArg, args);
+    }
+    return function() {
+      var now = new Date,
+        remaining = wait - (now - lastCalled);
+
+      args = arguments;
+      thisArg = this;
+
+      if (remaining <= 0) {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+        lastCalled = now;
+        result = func.apply(thisArg, args);
+      } else if (!timeoutId) {
+        timeoutId = setTimeout(trailingCall, remaining);
+      }
+      return result;
+    };
+  };
+})();
+(function() {
+  var Set = (function() {
+    var add = function(item) {
+      var i, data = this._data;
+      for (i = 0; i < data.length; i++) {
+        if (data[i] === item) {
+          return;
+        }
+      }
+      this.size ++;
+      data.push(item);
+      return data;
+    };
+
+    var Set = function(data) {
+      this.size = 0;
+      this._data = [];
+      var i;
+      if (data.length > 0) {
+        for (i = 0; i < data.length; i++) {
+          add.call(this, data[i]);
+        }
+      }
+    };
+    Set.prototype.add = add;
+    Set.prototype.get = function(index) { return this._data[index]; };
+    Set.prototype.has = function(item) {
+      var i, data = this._data;
+      for (i = 0; i < data.length; i++) {
+        if (this.get(i) === item) {
+          return true;
+        }
+      }
+      return false;
+    };
+    Set.prototype.is = function(map) {
+      if (map._data.length !== this._data.length) { return false; }
+      var i, j, flag, tData = this._data, mData = map._data;
+      for (i = 0; i < tData.length; i++) {
+        for (flag = false, j = 0; j < mData.length; j++) {
+          if (tData[i] === mData[j]) {
+            flag = true;
+            break;
+          }
+        }
+        if (!flag) { return false; }
+      }
+      return true;
+    };
+    Set.prototype.values = function() {
+      return this._data;
+    };
+    return Set;
+  })();
+
+  window.Lazyload = (function(doc) {
+    var queue = {js: [], css: []}, sources = {js: {}, css: {}}, context = this;
+    var createNode = function(name, attrs) {
+      var node = doc.createElement(name), attr;
+      for (attr in attrs) {
+        if (attrs.hasOwnProperty(attr)) {
+          node.setAttribute(attr, attrs[attr]);
+        }
+      }
+      return node;
+    };
+    var end = function(type, url) {
+      var s, q, qi, cbs, i, j, cur, val, flag;
+      if (type === 'js' || type ==='css') {
+        s = sources[type], q = queue[type];
+        s[url] = true;
+        for (i = 0; i < q.length; i++) {
+          cur = q[i];
+          if (cur.urls.has(url)) {
+            qi = cur, val = qi.urls.values();
+            qi && (cbs = qi.callbacks);
+            for (flag = true, j = 0; j < val.length; j++) {
+              cur = val[j];
+              if (!s[cur]) {
+                flag = false;
+              }
+            }
+            if (flag && cbs && cbs.length > 0) {
+              for (j = 0; j < cbs.length; j++) {
+                cbs[j].call(context);
+              }
+              qi.load = true;
+            }
+          }
+        }
+      }
+    };
+    var load = function(type, urls, callback) {
+      var s, q, qi, node, i, cur,
+        _urls = typeof urls === 'string' ? new Set([urls]) : new Set(urls), val, url;
+      if (type === 'js' || type ==='css') {
+        s = sources[type], q = queue[type];
+        for (i = 0; i < q.length; i++) {
+          cur = q[i];
+          if (_urls.is(cur.urls)) {
+            qi = cur;
+            break;
+          }
+        }
+        val = _urls.values();
+        if (qi) {
+          callback && (qi.load || qi.callbacks.push(callback));
+          callback && (qi.load && callback());
+        } else {
+          q.push({
+            urls: _urls,
+            callbacks: callback ? [callback] : [],
+            load: false
+          });
+          for (i = 0; i < val.length; i++) {
+            node = null, url = val[i];
+            if (s[url] === undefined) {
+              (type === 'js' ) && (node = createNode('script', { src: url }));
+              (type === 'css') && (node = createNode('link', { rel: 'stylesheet', href: url }));
+              if (node) {
+                node.onload = (function(type, url) {
+                  return function() {
+                    end(type, url);
+                  };
+                })(type, url);
+                (doc.head || doc.body).appendChild(node);
+                s[url] = false;
+              }
+            }
+          }
+        }
+      }
+    };
+    return {
+      js: function(url, callback) {
+        load('js', url, callback);
+      },
+      css: function(url, callback) {
+        load('css', url, callback);
+      }
+    };
+  })(this.document);
+})();
+</script><script>
+  (function() {
+    var TEXT_VARIABLES = {
+      version: '2.2.6',
+      sources: {
+        font_awesome: 'https://use.fontawesome.com/releases/v5.15.1/css/all.css',
+        jquery: 'https://unpkg.com/jquery@3.3.1/dist/jquery.min.js',
+        leancloud_js_sdk: '//cdn.jsdelivr.net/npm/leancloud-storage@3.13.2/dist/av-min.js',
+        chart: 'https://unpkg.com/chart.js@2.7.2/dist/Chart.min.js',
+        gitalk: {
+          js: 'https://unpkg.com/gitalk@1.2.2/dist/gitalk.min.js',
+          css: 'https://unpkg.com/gitalk@1.2.2/dist/gitalk.css'
+        },
+        valine: 'https//unpkg.com/valine/dist/Valine.min.js',
+        mathjax: 'https://unpkg.com/mathjax@2.7.4/unpacked/MathJax.js?config=TeX-MML-AM_CHTML',
+        mermaid: 'https://unpkg.com/mermaid@8.0.0-rc.8/dist/mermaid.min.js'
+      },
+      site: {
+        toc: {
+          selectors: 'h1,h2,h3'
+        }
+      },
+      paths: {
+        search_js: '/assets/search.js'
+      }
+    };
+    window.TEXT_VARIABLES = TEXT_VARIABLES;
+  })();
+</script>
+</head>
+  <body>
+    <div class="root" data-is-touch="false">
+      <div class="layout--page js-page-root"><div class="page__main js-page-main page__viewport has-aside cell cell--auto">
+
+      <div class="page__main-inner"><div class="page__header d-print-none"><header class="header"><div class="main">
+      <div class="header__title">
+        <div class="header__brand"><svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="500" zoomAndPan="magnify" viewBox="0 0 375 374.999991" height="500" preserveAspectRatio="xMidYMid meet" version="1.0"><defs><g/></defs><g fill="#000000" fill-opacity="1"><g transform="translate(26.375603, 311.99998)"><g><path d="M 165.5 -199.996094 L 133.25 -199.996094 C 131.5 -199.996094 130.25 -198.746094 130.25 -197.746094 L 130.25 -67.5 L 38 -199.246094 C 37.75 -199.746094 36.25 -199.996094 35.75 -199.996094 L 2.5 -199.996094 C 1.25 -199.996094 0 -198.746094 0 -197.746094 L 0 -48 L 38.25 -48 L 38.25 -132.5 L 130.25 -0.75 C 130.5 -0.25 132 0 132.5 0 L 165.5 0 C 167.25 0 168.25 -1.25 168.25 -2.25 L 168.25 -197.746094 C 168.25 -198.746094 167.25 -199.996094 165.5 -199.996094 Z M 165.5 -199.996094 "/></g></g></g><g fill="#000000" fill-opacity="1"><g transform="translate(203.123524, 311.99998)"><g><path d="M 97.5 -140.5 C 97.5 -118.5 68 -118.5 68 -118.5 L 38 -118.5 L 38 -164.25 L 68 -164.25 C 68 -164.25 97.5 -164.5 97.5 -140.5 Z M 135.75 -142.75 C 135.75 -201.496094 68 -199.996094 68 -199.996094 L 2.75 -199.996094 C 1.25 -199.996094 0 -198.746094 0 -197.746094 L 0 -81.25 L 68 -81.25 C 68 -81.25 100.25 -82.75 100.25 -59.25 C 100.25 -40 80.5 -36.5 68 -36.5 L 38.25 -36.5 L 38.25 0 L 68 0 C 81.5 0 138.5 -2.5 138.5 -58.25 C 138.5 -58.25 139.75 -89.25 108 -100 C 123.25 -106.25 135.75 -119.5 135.75 -142.75 Z M 135.75 -142.75 "/></g></g></g></svg><a title="On this site you can expect to find detailed posts that aim to teach as well as any random thoughts I think worthy of sharing -- hopefully both are useful and interesting!
+" href="/">Nicholas Bartlett</a></div><button class="button button--secondary button--circle search-button js-search-toggle"><i class="fas fa-search"></i></button></div><nav class="navigation">
+        <ul><li class="navigation__item"><a href="/blog">Blog</a></li><li class="navigation__item"><a href="/projects">Projects</a></li><li class="navigation__item"><a href="/archive.html">Archive</a></li><li class="navigation__item"><a href="/about.html">About</a></li><li><button class="button button--secondary button--circle search-button js-search-toggle"><i class="fas fa-search"></i></button></li></ul>
+      </nav></div>
+  </header>
+</div><div class="page__content"><div class ="main"><div class="grid grid--reverse">
+
+              <div class="col-aside d-print-none js-col-aside"><aside class="page__aside js-page-aside"><div class="toc-aside js-toc-root"></div>
+</aside></div>
+
+              <div class="col-main cell cell--auto"><!-- start custom main top snippet -->
+
+<!-- end custom main top snippet -->
+<article itemscope itemtype="http://schema.org/Article"><div class="article__header"><header><h1>Sports-Betting Arbitrage: Complex Arbitrage Through Linear Programming</h1></header><span class="split-space">&nbsp;</span>
+          <a class="edit-on-github"
+            title="Edit on Github"
+            href="https://github.com/NicholasBartlett/NicholasBartlett.github.io/tree/master/_posts/2023-02-04-sports-arb-complex-linprog.md">
+            <i class="far fa-edit"></i></a></div><meta itemprop="headline" content="Sports-Betting Arbitrage: Complex Arbitrage Through Linear Programming"><div class="article__info clearfix"><ul class="left-col menu"><li>
+              <a class="button button--secondary button--pill button--sm"
+                href="/archive.html?tag=Python">Python</a>
+            </li><li>
+              <a class="button button--secondary button--pill button--sm"
+                href="/archive.html?tag=Sports-Betting">Sports-Betting</a>
+            </li><li>
+              <a class="button button--secondary button--pill button--sm"
+                href="/archive.html?tag=Optimization">Optimization</a>
+            </li><li>
+              <a class="button button--secondary button--pill button--sm"
+                href="/archive.html?tag=Numerical-Methods">Numerical-Methods</a>
+            </li></ul><ul class="right-col menu"><li><i class="far fa-calendar-alt"></i> <span>Feb 04, 2023</span>
+            </li></ul></div><meta itemprop="author" content="Nicholas Bartlett"/><meta itemprop="datePublished" content="2023-02-04T00:00:00-06:00">
+    <meta itemprop="keywords" content="Python,Sports-Betting,Optimization,Numerical-Methods"><div class="js-article-content"><div class="layout--article"><!-- start custom article top snippet -->
+
+<!-- end custom article top snippet -->
+<div class="article__content" itemprop="articleBody"><p>Basic arbitrage is remarkably difficult to find in sports markets these days. More complex arbitrage strategies, however, are more prevalent. This article builds out the idea of using numerical methods (specifically linear programming) to find more complex arbitrage strategies. At the end, we implement this idea in Python and show an example.</p>
+
+<!--more-->
+
+<h3 id="the-setup">The Setup</h3>
+
+<p>The foundation of what we refer to as a “complex arbitrage” in this article is that notion certain bets may pay out across multiple outcomes. Different sportsbooks often have different ways that they like to group outcomes, and as a result the bets offered don’t always match up. This prevents us from using the simple formula we found in the article on sports-betting <a href="/sports-arb-simple">arbitrage for simpler cases</a>. In fact, there often is no analytical formula for arbitrage – instead we must use optimization algorithms to find the optimal bets to place. Much of this article will rely on ideas introduced in the first article, so check it out if the ideas below are unclear.</p>
+
+<h4 id="notation">Notation</h4>
+
+<p>Let \(A = \begin{bmatrix} \vec a_1 \\ \vdots \\ \vec a_n \end{bmatrix} \in \mathbb{R}^{n \times b}\) be the matrix containing the payouts for each of the $n$ outcomes and the $b$ available bets that can be placed. For example, let $\text{Book 1}$ offer an under $5$ goals scored bet where an outcome of $5$ goals results in a push (money back). Let $\text{Book 2}$ offer both over and under $5.5$ goals scored bets, and let $\text{Book 3}$ offer a bet that pays only if there is exactly $5$ goals scored. Then our payout matrix might look like</p>
+
+\[A = 
+\begin{array}{c c} 
+&amp; \begin{array}{c c c} \text{Bet }1 &amp; \text{Bet }2 &amp; \text{Bet }3 &amp; \text{Bet }4 \end{array} \\
+\begin{array}{c c c} \text{Under 5 Goals} \\ \text{5 Goals} \\ \text{Over 5 Goals} \end{array} &amp;
+\left[
+\begin{array}{c c c}
+\;\;\; 1.55 \;\;\; &amp; \;\;\; 0 \;\;\; &amp; \;\;\; 1.8 \;\;\; &amp; \;\;\; 0 \;\;\; \\
+1 &amp; 0 &amp; 0 &amp; 11 \\
+0 &amp; 3 &amp; 0 &amp; 0
+\end{array}
+\right]
+\end{array}. \notag\]
+
+<p>Also, we let $\vec w \in \mathbb{R}^b$ denote the portfolio weighting of each bet. As such, we require that $\vec w$ sums to one, or $\vec 1 ^\intercal \vec w = 1$. In addition, we cannot “short” any bets, meaning $\vec w \geq 0$. Lastly, we will use the notation $A_{-j} \in \mathbb{R}^{(n-1) \times b}$ to denote the matrix $A$ with its $j$-th row removed (the vector $\vec a_j$ is removed).</p>
+
+<p class="info"><strong>Note:</strong> This approach assumes that the $n$ outcomes are mutually exclusive and span the entire set of possible outcomes. We cannot have arbitrage if there are outcomes that we cannot bet on.</p>
+
+<h3 id="the-problem">The Problem</h3>
+
+<p>From here, we can move to solving the problem. Depending on how we set things up, our objective function will differ slightly, however they are all still arbitrages. Below, we walk through a few different ideas of how to set the problems up – and of course, how to solve them.</p>
+
+<h4 id="solving-the-problem">Solving The Problem</h4>
+
+<p>Problems of the forms that are seen below are called linear programs, and luckily their are many optimization algorithms available to solve linear programming problems. In our implementation, we will use SciPy’s optimization package in Python which has a built in linear programming solver. In doing so, we will have to group all of our inequality constraints together into one big matrix, and likewise with our equality constraints. Part of the art of solving optimization problems is framing them in such a way that we can actually solve them.</p>
+
+<p class="info"><strong>Note:</strong> Sometimes, <em>there is no solution</em>. This happens when our constraints are so restrictive that no $\vec w$ is capable of satisfying them all. This means that no arbitrage is possible. Although unlikely, it is also possible that there are multiple solutions, where multiple betting strategies have the exact same result.</p>
+
+<h4 id="maximizing-a-specific-outcome-textproblem-1">Maximizing A Specific Outcome ($\text{Problem #1}$)</h4>
+
+<p>To have arbitrage, we must have no outcomes that would result in a loss, and at least one or more outcome(s) that would result in a positive profit. There are numerous ways that we could express our desire for profit mathematically, and we will explore a few of these. For now, let’s assume that we simply want to maximize our profit in outcome $j$. Our objective is thus as follows:</p>
+
+\[\begin{align}
+\text{Maximize: }&amp; \vec a_j ^ \intercal \vec w \\
+\text{such that:}&amp; \notag \\
+&amp; \vec 1 ^\intercal \vec w = 1 \notag \\
+&amp; \vec w \geq 0 \notag \\
+&amp; A \vec w \geq 1 \notag
+\end{align}\]
+
+<h4 id="making-equal-payouts-textproblem-2">Making Equal-Payouts ($\text{Problem #2}$)</h4>
+
+<p>Ideally, we can recieve a profit in <em>every</em> outcome. Fortunately, we can use linear programming to solve for these arbitrages as well. The caveat is that these opportunities are much more rare. Now, our objective becomes</p>
+
+\[\begin{align*}
+\text{Maximize: }&amp; \vec a_j ^ \intercal \vec w \\
+\text{such that:}&amp; \\
+&amp; \vec 1 ^\intercal \vec w = 1 \\
+&amp; \vec a_1 ^ \intercal \vec w = \vec a_2 ^ \intercal \vec w = \dots = \vec a_n ^ \intercal \vec w \\
+&amp; \vec w \geq 0
+\end{align*}\]
+
+<p>where now our choice of $j$ is trivial. In order to use linear programming, we need to put things in a different form. Note that the last constraint is equivalent to $\vec a_i ^ \intercal \vec w = \vec a_j ^ \intercal \vec w$ for $i=1,2, \dots, n$. Dropping the redundant $j$-th row, and letting \(J = \begin{bmatrix} \vec a_j \\ \vdots \\ \vec a_j \end{bmatrix} \in \mathbb{R}^{(n-1) \times b}\), then this constraint is written as</p>
+
+\[A_{-j} \vec w = J \vec w \\
+\implies (A_{-j}-J) \vec w = 0.
+\notag\]
+
+<p>With this, our objective is</p>
+
+\[\begin{align}
+\text{Maximize: }&amp; \vec a_j ^ \intercal \vec w \\
+\text{such that:}&amp; \notag \\
+&amp; \vec 1 ^\intercal \vec w = 1 \notag \\
+&amp; (A_{-j}-J) \vec w = 0 \notag \\
+&amp; \vec w \geq 0 \notag \\
+\end{align}\]
+
+<p>and we can proceed with our linear programming algorithms.</p>
+
+<p class="info"><strong>Note:</strong> The formulation above could technically have a solution leading to a guaranteed loss. Although we could choose to prevent this, sometimes it can be useful to see a loss. Creating the <em>best</em> possible even-payout arbitrage (which could be negative) provides a way to assess how large the pricing discrepancies are between books/bets, which is closely related to how fair the pricing is in general.</p>
+
+<h4 id="maximizing-expected-profit-textproblem-3">Maximizing Expected Profit ($\text{Problem #3}$)</h4>
+
+<p>To add some flavor to the discussion, and to illustrate the breadth of possibilities available, we will demonstrate how to use linear programming to maximize the expected profit earned while still ensuring no losses. Note that in order to utilize this method, one must have a prior distribution for the outcomes, meaning we must assign a probability to each outcome. Realistically, this approach would best serve situations in which arbitrage is available and one has a strong belief about the likelihood of each event. In such situations, this method will maximize your expected profit.</p>
+
+<p>Let $\vec d \in \mathbb{R}^n$ be our prespecified probability distribution so that $d_i$ holds the probability of outcome $i$ occurring. Knowing that</p>
+
+\[E[\text{Payout}]=\vec d ^\intercal (A \vec w) = (\vec d ^\intercal A) \vec w, \notag\]
+
+<p>we can easily write our objective as</p>
+
+\[\begin{align}
+\text{Maximize: }&amp; (\vec d ^\intercal A) \vec w \\
+\text{such that:}&amp; \notag \\
+&amp; \vec 1 ^\intercal \vec w = 1 \notag \\
+&amp; \vec w \geq 0 \notag \\
+&amp; A \vec w \geq 1. \notag
+\end{align}\]
+
+<p>The output of a formulation such as this is somewhat useful, however thinking about probability distributions and $E[\text{profit}]$ becomes far more interesting when we discuss the use of quadratic programming to minimize variance. More on this below.</p>
+
+<h3 id="the-existence-of-a-solution">The Existence Of A Solution</h3>
+
+<p>Taking a step back and shifting to a geometric perspective leads to an obvious but interesting conclusion: the existence of a solution depends entirely on the constraints. Specifically, the constraints specify a $b$-dimensional region (called the feasible region) in which $\vec w$ could live and still satisfy each constraint. If such a region doesn’t exist, then clearly the problem has no solution.</p>
+
+<p>The point is that $\text{Problem #1}$ and $\text{Problem #3}$ have the same constraints, and thus if one of them has a solution then both of them have a solution. The difference between them is which direction we need to move $\vec w$ within the feasible region to maximize the given objective. As such, once we establish our constraints there is freedom to choose an objective that suits our needs. Of course there is always the possibility that the feasible region is a point, which would lead all objectives to have the same solution.</p>
+
+<h4 id="equal-payout-arbitrage-is-rare">Equal-Payout Arbitrage Is Rare</h4>
+
+<p>Generally speaking (i.e. given no specific form for $A$) we see that $\text{Problem #2}$ has additional equality constraints such that in practice it is far less likely to find (profitable) arbitrage in this situation. As a result, it is beneficial to look for this type of arbitrage only after finding arbitrages of the other form(s).</p>
+
+<p>These additional equality constraints specify a region of its own, which we will call $\text{Region X}$. Referring to the region generated by either $\text{Problem #1}$ or $3$ as $\text{Region Y}$, then $\text{Problem #2}$ will only have a profitable arbitrage opportunity if some part of $\text{Region X}$ overlaps with $\text{Region Y}$, or $\text{Region X} \cap \text{Region Y} \neq \emptyset$.</p>
+
+<p>It goes without saying that certainty in payouts is desirable, which is why an equal-payout arbitrage is worth seeking. But clearly there is only arbitrage inside $\text{Region Y}$, so perhaps there is a better way to go about our goal of minimizing variance? In fact, there is: quadratic programming.</p>
+
+<h3 id="quadratic-programming">Quadratic Programming</h3>
+
+<p>With quadratic programming, we can start in $\text{Region Y}$ and minimize variance from there. If there is a profitable equal-payout arbitrage then we will find it. If there is not, then we will find the next best thing. Quadratic programming, in the form we will discuss, is quite similar to linear programming but instead of having a linear objective function we have a quadratic objective function.</p>
+
+<p>Specifically, we seek to minimize variance. Let $\Sigma \in \mathbb{R}^{b \times b}$ denote the covariance matrix of our bet payouts under the distribution $\vec d$ discussed in $\text{Problem #3}$. Knowing that the total portfolio variance is given by $\vec w ^\intercal \Sigma \vec w$, then our objective is</p>
+
+\[\begin{align}
+\text{Minimize: }&amp; \vec w ^\intercal \Sigma \vec w \\
+\text{such that:}&amp; \notag \\
+&amp; \vec 1 ^\intercal \vec w = 1 \notag \\
+&amp; \vec w \geq 0 \notag \\
+&amp; A \vec w \geq 1 \notag \\
+&amp; (\vec d ^\intercal A) \vec w \geq r^*, \notag
+\end{align}\]
+
+<p>where \(r^*\) is some arbitrary expected return threshold. The idea is that <em>given</em> some defined level of return, we want to find the $\vec w$ that <em>minimizes</em> the portfolio variance. If we did not include the $r^*$ constraint then we would always just find the global minimum variance portfolio. By including it, we allow ourselves the opportunity to choose exactly what we are looking for.</p>
+
+<p class="info"><strong>Note:</strong> In fact, there may be multiple minimum variance portfolios. Given our general form for $A$, we can ensure that $\Sigma$ is positive semi-definite (just like any covariance matrix) but not necessarily positive definite. This is because we might have some bet(s) that is a linear combination of other bets. If $\Sigma$ is positive semi-definite but not positive definite, then we will have multiple solutions to $(4)$. Thus, by including $r^*$ we can seek the best possible portfolio.</p>
+
+<p>Realistically, we would set a range of values for \(r^*\) and compare the expected return with the variance for each. As such, it is useful to have some bounds on the values to compute. First, we know that an arbitrage defined by $\text{Region Y}$ is always profitable. Second, we know that the maximum expected return we could possibly earn with arbitrage would be given by the output of $\text{Problem #3}$. If we call the optimum for $\text{Problem #3}$ $r_\text{max}$, then we know that $0 \leq r^* \leq r_\text{max}$.
+Any algorithm computing across this range could start at $r^*=0$ and then immediately jump to whatever expected return was found in that first step, and then carry on from there until $r_\text{max}$.</p>
+
+<h4 id="the-prior-distribution">The Prior Distribution</h4>
+
+<p>An evident downfall of this approach is the extreme difficulty in properly establishing a probability distribution for the outcomes. If you were able to predict the probabilities with any decent accuracy you would already be an extremely profitable sports-bettor. Still, this approach is quite beneficial even under basic assumptions. One option would be to assume a completely uniform distribution – in which case we simply want to seek even payouts. Another option could be to use the implied probabilities present in the odds, take some sort of average by outcome, and then scale everything so that $\vec d$ sums to one.</p>
+
+<h3 id="python-implementation">Python Implementation</h3>
+<p>Below, we provide some basic code for both the linear programming and quadratic programming problems. We use <code class="language-plaintext highlighter-rouge">scipy</code> for the the former and <code class="language-plaintext highlighter-rouge">cvxopt</code> for the latter.</p>
+
+<h4 id="linear-programming-textproblem-2">Linear Programming ($\text{Problem #2}$)</h4>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="n">np</span>
+<span class="kn">from</span> <span class="nn">scipy.optimize</span> <span class="kn">import</span> <span class="n">linprog</span>
+
+<span class="k">def</span> <span class="nf">complex_arb_equal</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">notional</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">j</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">return_outcomes</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="s">'''
+    Given matrix A of payouts, calculates an arbitrage the maximizes the profit in the event of outcome j.
+    Note that j is indexed starting from 0.
+    '''</span>
+    
+    <span class="c1"># Dimensions (n: number of outcomes, b: number of available bets)
+</span>    <span class="n">n</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">A</span><span class="p">.</span><span class="n">shape</span>
+    
+    <span class="c1"># Objective (WLOG we can always let this be the first outcome, but we'll leave j in for clarity purposes)
+</span>    <span class="n">obj</span> <span class="o">=</span> <span class="o">-</span><span class="n">A</span><span class="p">[</span><span class="n">j</span><span class="p">]</span>
+    
+    <span class="c1">### BUILDING THE CONSTRAINTS ###
+</span>    
+    <span class="c1"># Equality constraint: weights sum to 1
+</span>    <span class="n">matrix_eq_1</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+    <span class="n">constr_eq_1</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c1"># Equality constraint: (A_-j - J) w = 0
+</span>    <span class="n">J</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">A</span><span class="p">[</span><span class="n">j</span><span class="p">]]</span> <span class="o">*</span> <span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">))</span>
+    <span class="n">A_minus_j</span> <span class="o">=</span> <span class="n">A</span><span class="p">[</span><span class="n">np</span><span class="p">.</span><span class="n">arange</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">!=</span> <span class="n">j</span><span class="p">]</span>
+    
+    <span class="n">matrix_eq_2</span> <span class="o">=</span> <span class="n">A_minus_j</span> <span class="o">-</span> <span class="n">J</span>
+    <span class="n">constr_eq_2</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">n</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    
+    <span class="c1"># Combining equality constraints
+</span>    <span class="n">matrix_eq</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">matrix_eq_1</span><span class="p">,</span> <span class="n">matrix_eq_2</span><span class="p">])</span>
+    <span class="n">constr_eq</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">constr_eq_1</span><span class="p">,</span> <span class="n">constr_eq_2</span><span class="p">)</span>
+
+    <span class="c1"># Inequality constraints: no potential losses
+</span>    <span class="n">matrix_ineq</span> <span class="o">=</span> <span class="o">-</span><span class="n">A</span>
+    <span class="n">constr_ineq</span> <span class="o">=</span> <span class="o">-</span> <span class="n">np</span><span class="p">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+
+    <span class="c1"># Calculate the weights. By default the bounds are (0, None) but we add it anyway to emphasize that the w &gt;= 0
+</span>    <span class="n">prog</span> <span class="o">=</span> <span class="n">linprog</span><span class="p">(</span><span class="n">c</span> <span class="o">=</span> <span class="n">obj</span><span class="p">,</span> <span class="n">A_eq</span> <span class="o">=</span> <span class="n">matrix_eq</span><span class="p">,</span> <span class="n">b_eq</span> <span class="o">=</span> <span class="n">constr_eq</span><span class="p">,</span> <span class="n">A_ub</span> <span class="o">=</span> <span class="n">matrix_ineq</span><span class="p">,</span> <span class="n">b_ub</span> <span class="o">=</span> <span class="n">constr_ineq</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="bp">None</span><span class="p">))</span>
+    
+    <span class="c1"># Check the status. Typically we will only encounter status 0 (success) or 2 (problem is unfeasible/no solution)
+</span>    <span class="c1"># For now, if we get another status we will just alert the user.
+</span>    <span class="k">if</span> <span class="n">prog</span><span class="p">.</span><span class="n">status</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'No solution was found. Arbitrage is not feasible.'</span><span class="p">)</span>
+        <span class="k">return</span>
+    
+    <span class="k">elif</span> <span class="n">prog</span><span class="p">.</span><span class="n">status</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="nb">Exception</span><span class="p">(</span><span class="sa">f</span><span class="s">"Status </span><span class="si">{</span><span class="n">prog</span><span class="p">.</span><span class="n">status</span><span class="si">}</span><span class="s">: </span><span class="si">{</span><span class="n">prog</span><span class="p">.</span><span class="n">message</span><span class="si">}</span><span class="s">"</span><span class="p">)</span>
+        
+    <span class="c1"># If arb was found, extract the bet weights, and the returns in each situation
+</span>    <span class="n">w_vec</span> <span class="o">=</span> <span class="n">prog</span><span class="p">.</span><span class="n">x</span><span class="p">.</span><span class="nb">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    <span class="n">returns</span> <span class="o">=</span> <span class="p">((</span><span class="n">A</span> <span class="o">@</span> <span class="n">prog</span><span class="p">.</span><span class="n">x</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span><span class="c1">#.round(4)
+</span>    
+    <span class="k">if</span> <span class="n">return_outcomes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">notional</span> <span class="o">*</span> <span class="n">w_vec</span><span class="p">,</span> <span class="n">returns</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">notional</span> <span class="o">*</span> <span class="n">w_vec</span>
+</code></pre></div></div>
+
+<h4 id="quadratic-programming-1">Quadratic Programming</h4>
+<p>First, we construct a basic function to calculate the covariance matrix, $\Sigma$, given $A$. Then we implement the quadratic program.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="kn">from</span> <span class="nn">cvxopt</span> <span class="kn">import</span> <span class="n">cvxopt</span>
+<span class="kn">from</span> <span class="nn">cvxopt.solvers</span> <span class="kn">import</span> <span class="n">qp</span>
+<span class="kn">from</span> <span class="nn">cvxopt</span> <span class="kn">import</span> <span class="n">matrix</span>
+<span class="n">cvxopt</span><span class="p">.</span><span class="n">solvers</span><span class="p">.</span><span class="n">options</span><span class="p">[</span><span class="s">"show_progress"</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+<span class="n">cvxopt</span><span class="p">.</span><span class="n">solvers</span><span class="p">.</span><span class="n">options</span><span class="p">[</span><span class="s">"abstol"</span><span class="p">]</span> <span class="o">=</span> <span class="mf">1e-10</span>
+
+<span class="c1"># Covariance Matrix
+</span><span class="k">def</span> <span class="nf">calculate_sigma</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">d_vec</span><span class="p">):</span>
+    
+    <span class="n">n</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">A</span><span class="p">.</span><span class="n">shape</span>
+        
+    <span class="n">mu_vec</span> <span class="o">=</span> <span class="n">A</span><span class="p">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">d_vec</span>
+    <span class="n">sigma</span> <span class="o">=</span> <span class="mi">0</span>
+    
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n</span><span class="p">):</span>
+        <span class="n">sigma</span> <span class="o">+=</span> <span class="n">d_vec</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="n">np</span><span class="p">.</span><span class="n">outer</span><span class="p">(</span><span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">mu_vec</span><span class="p">,</span> <span class="n">A</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">-</span> <span class="n">mu_vec</span><span class="p">)</span>
+    
+    <span class="k">return</span> <span class="n">sigma</span>
+
+<span class="c1"># Quadratic Programming
+</span><span class="k">def</span> <span class="nf">complex_arb_minvar</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">r_star</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">d_vec</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">notional</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">return_outcomes</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    
+    <span class="c1"># Dimensions (n: number of outcomes, b: number of available bets)
+</span>    <span class="n">n</span><span class="p">,</span> <span class="n">b</span> <span class="o">=</span> <span class="n">A</span><span class="p">.</span><span class="n">shape</span>
+    
+    <span class="c1"># Uniform by default
+</span>    <span class="k">if</span> <span class="n">d_vec</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">d_vec</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span> <span class="o">/</span> <span class="n">n</span>
+    
+    <span class="c1"># Covariance matrix
+</span>    <span class="n">sigma</span> <span class="o">=</span> <span class="n">calculate_sigma</span><span class="p">(</span><span class="n">A</span><span class="p">,</span> <span class="n">d_vec</span><span class="p">)</span>
+    
+    <span class="c1"># Reshape to please CVXOPT
+</span>    <span class="n">d_vec</span> <span class="o">=</span> <span class="n">d_vec</span><span class="p">.</span><span class="n">reshape</span><span class="p">((</span><span class="n">n</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+    
+    <span class="c1"># Objective Function. CVXOPT requires an input for the second AND first degree, but the first degree is 0 for this.
+</span>    <span class="n">P</span> <span class="o">=</span> <span class="n">sigma</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    
+    <span class="c1">### BUILDING THE CONSTRAINTS ###
+</span>    
+    <span class="c1"># Equality constraint: weights sum to 1
+</span>    <span class="n">matrix_eq</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">ones</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="n">b</span><span class="p">))</span>
+    <span class="n">constr_eq</span> <span class="o">=</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># Inequality constraints: no potential losses
+</span>    <span class="n">matrix_ineq_1</span> <span class="o">=</span> <span class="o">-</span><span class="n">A</span>
+    <span class="n">constr_ineq_1</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="p">.</span><span class="n">ones</span><span class="p">(</span><span class="n">n</span><span class="p">)</span>
+    
+    <span class="c1"># Inequality constraints: minimum expected return
+</span>    <span class="n">matrix_ineq_2</span> <span class="o">=</span> <span class="o">-</span><span class="n">d_vec</span><span class="p">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">A</span>
+    <span class="n">constr_ineq_2</span> <span class="o">=</span> <span class="o">-</span><span class="p">(</span><span class="mi">1</span> <span class="o">+</span> <span class="n">r_star</span><span class="p">)</span>
+    
+    <span class="c1"># Inequality constraints: all weights are positive
+</span>    <span class="n">matrix_ineq_3</span> <span class="o">=</span> <span class="o">-</span><span class="n">np</span><span class="p">.</span><span class="n">eye</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    <span class="n">constr_ineq_3</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">b</span><span class="p">)</span>
+    
+    <span class="c1"># Combine them
+</span>    <span class="n">matrix_ineq</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">matrix_ineq_1</span><span class="p">,</span> <span class="n">matrix_ineq_2</span><span class="p">,</span> <span class="n">matrix_ineq_3</span><span class="p">])</span>
+    <span class="n">constr_ineq</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">concatenate</span><span class="p">([</span><span class="n">np</span><span class="p">.</span><span class="n">append</span><span class="p">(</span><span class="n">constr_ineq_1</span><span class="p">,</span> <span class="n">constr_ineq_2</span><span class="p">),</span> <span class="n">constr_ineq_3</span><span class="p">])</span>
+    
+    <span class="c1"># Convert to CVXOPT's matrix class of type double
+</span>    <span class="n">P</span><span class="p">,</span> <span class="n">matrix_eq</span><span class="p">,</span> <span class="n">matrix_ineq</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">(</span><span class="n">P</span><span class="p">,</span> <span class="n">tc</span><span class="o">=</span><span class="s">'d'</span><span class="p">),</span> <span class="n">matrix</span><span class="p">(</span><span class="n">matrix_eq</span><span class="p">,</span> <span class="n">tc</span><span class="o">=</span><span class="s">'d'</span><span class="p">),</span> <span class="n">matrix</span><span class="p">(</span><span class="n">matrix_ineq</span><span class="p">,</span> <span class="n">tc</span><span class="o">=</span><span class="s">'d'</span><span class="p">)</span>
+    <span class="n">q</span><span class="p">,</span> <span class="n">constr_eq</span><span class="p">,</span> <span class="n">constr_ineq</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="n">tc</span><span class="o">=</span><span class="s">'d'</span><span class="p">),</span> <span class="n">matrix</span><span class="p">(</span><span class="n">constr_eq</span><span class="p">,</span> <span class="n">tc</span><span class="o">=</span><span class="s">'d'</span><span class="p">),</span> <span class="n">matrix</span><span class="p">(</span><span class="n">constr_ineq</span><span class="p">,</span> <span class="n">tc</span><span class="o">=</span><span class="s">'d'</span><span class="p">)</span>
+    
+    <span class="c1"># Calculate the weights. By default the bounds are (0, None) but we add it anyway to emphasize that the w &gt;= 0
+</span>    <span class="k">try</span><span class="p">:</span>
+        <span class="n">prog</span> <span class="o">=</span> <span class="n">qp</span><span class="p">(</span><span class="n">P</span><span class="o">=</span><span class="n">P</span><span class="p">,</span> <span class="n">q</span><span class="o">=</span><span class="n">q</span><span class="p">,</span> <span class="n">G</span><span class="o">=</span><span class="n">matrix_ineq</span><span class="p">,</span> <span class="n">h</span><span class="o">=</span><span class="n">constr_ineq</span><span class="p">,</span> <span class="n">A</span><span class="o">=</span><span class="n">matrix_eq</span><span class="p">,</span> <span class="n">b</span><span class="o">=</span><span class="n">constr_eq</span><span class="p">)</span>
+    <span class="k">except</span> <span class="nb">ValueError</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">"Problem not feasible! CVXOPT domain error."</span><span class="p">)</span>
+        <span class="k">return</span>
+    
+    <span class="c1"># Check the status
+</span>    
+    <span class="k">if</span> <span class="n">prog</span><span class="p">[</span><span class="s">'status'</span><span class="p">]</span> <span class="o">!=</span> <span class="s">'optimal'</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">'No solution was found. Arbitrage is not feasible.'</span><span class="p">)</span>
+        <span class="k">return</span>
+        
+    <span class="c1"># If arb was found, extract the bet weights, and the returns in each situation
+</span>    <span class="n">w_vec</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">array</span><span class="p">(</span><span class="n">prog</span><span class="p">[</span><span class="s">'x'</span><span class="p">])</span>
+    <span class="n">returns</span> <span class="o">=</span> <span class="p">((</span><span class="n">A</span> <span class="o">@</span> <span class="n">w_vec</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="n">std_dev</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">w_vec</span><span class="p">.</span><span class="n">T</span> <span class="o">@</span> <span class="n">sigma</span> <span class="o">@</span> <span class="n">w_vec</span><span class="p">).</span><span class="nb">round</span><span class="p">(</span><span class="mi">4</span><span class="p">))[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span>
+    
+    <span class="k">if</span> <span class="n">return_outcomes</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">notional</span> <span class="o">*</span> <span class="n">w_vec</span><span class="p">.</span><span class="nb">round</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">std_dev</span><span class="p">.</span><span class="nb">round</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">returns</span><span class="p">.</span><span class="nb">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+    
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">notional</span> <span class="o">*</span> <span class="n">w_vec</span><span class="p">.</span><span class="nb">round</span><span class="p">(</span><span class="mi">4</span><span class="p">),</span> <span class="n">std_dev</span><span class="p">.</span><span class="nb">round</span><span class="p">(</span><span class="mi">4</span><span class="p">)</span>
+</code></pre></div></div>
+</div><section class="article__sharing d-print-none"></section><div class="d-print-none"><footer class="article__footer"><meta itemprop="dateModified" content="2023-02-04T00:00:00-06:00"><!-- start custom article footer snippet -->
+
+<!-- end custom article footer snippet -->
+<div class="article__subscribe"><div class="subscribe"><i class="fas fa-rss"></i> <a type="application/rss+xml" href="/feed.xml">Subscribe</a></div>
+</div><div class="article__license"><div class="license">
+    <p>This work is licensed under a <a itemprop="license" rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/">Attribution-NonCommercial 4.0 International</a> license.
+      <a rel="license" href="https://creativecommons.org/licenses/by-nc/4.0/">
+        <img alt="Attribution-NonCommercial 4.0 International" src="https://i.creativecommons.org/l/by-nc/4.0/88x31.png" />
+      </a>
+    </p>
+  </div></div></footer>
+<div class="article__section-navigator clearfix"><div class="previous"><span>PREVIOUS</span><a href="/sports-arb-simple">Sports-Betting Arbitrage: The Simple Case</a></div></div></div>
+
+</div>
+
+<script>(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    $(function() {
+      var $this ,$scroll;
+      var $articleContent = $('.js-article-content');
+      var hasSidebar = $('.js-page-root').hasClass('layout--page--sidebar');
+      var scroll = hasSidebar ? '.js-page-main' : 'html, body';
+      $scroll = $(scroll);
+
+      $articleContent.find('.highlight').each(function() {
+        $this = $(this);
+        $this.attr('data-lang', $this.find('code').attr('data-lang'));
+      });
+      $articleContent.find('h1[id], h2[id], h3[id], h4[id], h5[id], h6[id]').each(function() {
+        $this = $(this);
+        $this.append($('<a class="anchor d-print-none" aria-hidden="true"></a>').html('<i class="fas fa-anchor"></i>'));
+      });
+      $articleContent.on('click', '.anchor', function() {
+        $scroll.scrollToAnchor('#' + $(this).parent().attr('id'), 400);
+      });
+    });
+  });
+})();
+</script>
+</div><section class="page__comments d-print-none"></section></article><!-- start custom main bottom snippet -->
+
+<!-- end custom main bottom snippet -->
+</div>
+            </div></div></div><div class="page__footer d-print-none">
+<footer class="footer py-4 js-page-footer">
+  <div class="main"><div itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Nicholas Bartlett"><meta itemprop="url" content="/"><meta itemprop="description" content="Quantitative researcher, trader and University of Chicago Financial Mathematics alum."><div class="footer__author-links"><div class="author-links">
+  <ul class="menu menu--nowrap menu--inline"><li title="Follow me on Github.">
+        <a class="button button--circle github-button" itemprop="sameAs" href="https://github.com/NicholasBartlett" target="_blank">
+          <div class="icon"><svg fill="#000000" width="24px" height="24px" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg">
+  <path class="svgpath" data-index="path_0" fill="#272636" d="M0 525.2c0 223.6 143.3 413.7 343 483.5 26.9 6.8 22.8-12.4 22.8-25.4l0-88.7c-155.3 18.2-161.5-84.6-172-101.7-21.1-36-70.8-45.2-56-62.3 35.4-18.2 71.4 4.6 113.1 66.3 30.2 44.7 89.1 37.2 119 29.7 6.5-26.9 20.5-50.9 39.7-69.6C248.8 728.2 181.7 630 181.7 513.2c0-56.6 18.7-108.7 55.3-150.7-23.3-69.3 2.2-128.5 5.6-137.3 66.5-6 135.5 47.6 140.9 51.8 37.8-10.2 80.9-15.6 129.1-15.6 48.5 0 91.8 5.6 129.8 15.9 12.9-9.8 77-55.8 138.8-50.2 3.3 8.8 28.2 66.7 6.3 135 37.1 42.1 56 94.6 56 151.4 0 117-67.5 215.3-228.8 243.7 26.9 26.6 43.6 63.4 43.6 104.2l0 128.8c0.9 10.3 0 20.5 17.2 20.5C878.1 942.4 1024 750.9 1024 525.3c0-282.9-229.3-512-512-512C229.1 13.2 0 242.3 0 525.2L0 525.2z" />
+</svg>
+</div>
+        </a>
+      </li></ul>
+</div>
+</div>
+    </div><div class="site-info mt-2">
+      <div>© Nicholas Bartlett 2021,
+        Powered by <a title="Jekyll is a simple, blog-aware, static site generator." href="http://jekyllrb.com/">Jekyll</a> & <a
+        title="TeXt is a super customizable Jekyll theme." href="https://github.com/kitian616/jekyll-TeXt-theme">TeXt Theme</a>.
+      </div>
+    </div>
+  </div>
+</footer>
+</div></div>
+    </div><script>(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    var $body = $('body'), $window = $(window);
+    var $pageRoot = $('.js-page-root'), $pageMain = $('.js-page-main');
+    var activeCount = 0;
+    function modal(options) {
+      var $root = this, visible, onChange, hideWhenWindowScroll = false;
+      var scrollTop;
+      function setOptions(options) {
+        var _options = options || {};
+        visible = _options.initialVisible === undefined ? false : show;
+        onChange = _options.onChange;
+        hideWhenWindowScroll = _options.hideWhenWindowScroll;
+      }
+      function init() {
+        setState(visible);
+      }
+      function setState(isShow) {
+        if (isShow === visible) {
+          return;
+        }
+        visible = isShow;
+        if (visible) {
+          activeCount++;
+          scrollTop = $(window).scrollTop() || $pageMain.scrollTop();
+          $root.addClass('modal--show');
+          $pageMain.scrollTop(scrollTop);
+          activeCount === 1 && ($pageRoot.addClass('show-modal'), $body.addClass('of-hidden'));
+          hideWhenWindowScroll && window.hasEvent('touchstart') && $window.on('scroll', hide);
+          $window.on('keyup', handleKeyup);
+        } else {
+          activeCount > 0 && activeCount--;
+          $root.removeClass('modal--show');
+          $window.scrollTop(scrollTop);
+          activeCount === 0 && ($pageRoot.removeClass('show-modal'), $body.removeClass('of-hidden'));
+          hideWhenWindowScroll && window.hasEvent('touchstart') && $window.off('scroll', hide);
+          $window.off('keyup', handleKeyup);
+        }
+        onChange && onChange(visible);
+      }
+      function show() {
+        setState(true);
+      }
+      function hide() {
+        setState(false);
+      }
+      function handleKeyup(e) {
+        // Char Code: 27  ESC
+        if (e.which ===  27) {
+          hide();
+        }
+      }
+      setOptions(options);
+      init();
+      return {
+        show: show,
+        hide: hide,
+        $el: $root
+      };
+    }
+    $.fn.modal = modal;
+  });
+})();
+</script><div class="modal modal--overflow page__search-modal d-print-none js-page-search-modal"><script>
+(function () {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    // search panel
+    var search = (window.search || (window.search = {}));
+    var useDefaultSearchBox = window.useDefaultSearchBox === undefined ?
+      true : window.useDefaultSearchBox ;
+
+    var $searchModal = $('.js-page-search-modal');
+    var $searchToggle = $('.js-search-toggle');
+    var searchModal = $searchModal.modal({ onChange: handleModalChange, hideWhenWindowScroll: true });
+    var modalVisible = false;
+    search.searchModal = searchModal;
+
+    var $searchBox = null;
+    var $searchInput = null;
+    var $searchClear = null;
+
+    function getModalVisible() {
+      return modalVisible;
+    }
+    search.getModalVisible = getModalVisible;
+
+    function handleModalChange(visible) {
+      modalVisible = visible;
+      if (visible) {
+        search.onShow && search.onShow();
+        useDefaultSearchBox && $searchInput[0] && $searchInput[0].focus();
+      } else {
+        search.onShow && search.onHide();
+        useDefaultSearchBox && $searchInput[0] && $searchInput[0].blur();
+        setTimeout(function() {
+          useDefaultSearchBox && ($searchInput.val(''), $searchBox.removeClass('not-empty'));
+          search.clear && search.clear();
+          window.pageAsideAffix && window.pageAsideAffix.refresh();
+        }, 400);
+      }
+    }
+
+    $searchToggle.on('click', function() {
+      modalVisible ? searchModal.hide() : searchModal.show();
+    });
+    // Char Code: 83  S, 191 /
+    $(window).on('keyup', function(e) {
+      if (!modalVisible && !window.isFormElement(e.target || e.srcElement) && (e.which === 83 || e.which === 191)) {
+        modalVisible || searchModal.show();
+      }
+    });
+
+    if (useDefaultSearchBox) {
+      $searchBox = $('.js-search-box');
+      $searchInput = $searchBox.children('input');
+      $searchClear = $searchBox.children('.js-icon-clear');
+      search.getSearchInput = function() {
+        return $searchInput.get(0);
+      };
+      search.getVal = function() {
+        return $searchInput.val();
+      };
+      search.setVal = function(val) {
+        $searchInput.val(val);
+      };
+
+      $searchInput.on('focus', function() {
+        $(this).addClass('focus');
+      });
+      $searchInput.on('blur', function() {
+        $(this).removeClass('focus');
+      });
+      $searchInput.on('input', window.throttle(function() {
+        var val = $(this).val();
+        if (val === '' || typeof val !== 'string') {
+          search.clear && search.clear();
+        } else {
+          $searchBox.addClass('not-empty');
+          search.onInputNotEmpty && search.onInputNotEmpty(val);
+        }
+      }, 400));
+      $searchClear.on('click', function() {
+        $searchInput.val(''); $searchBox.removeClass('not-empty');
+        search.clear && search.clear();
+      });
+    }
+  });
+})();
+</script><div class="search search--dark">
+  <div class="main">
+    <div class="search__header">Search</div>
+    <div class="search-bar">
+      <div class="search-box js-search-box">
+        <div class="search-box__icon-search"><i class="fas fa-search"></i></div>
+        <input type="text" />
+        <div class="search-box__icon-clear js-icon-clear">
+          <a><i class="fas fa-times"></i></a>
+        </div>
+      </div>
+      <button class="button button--theme-dark button--pill search__cancel js-search-toggle">
+        Cancel</button>
+    </div>
+    <div class="search-result js-search-result"></div>
+  </div>
+</div>
+<script>var SOURCES = window.TEXT_VARIABLES.sources;
+var PAHTS = window.TEXT_VARIABLES.paths;
+window.Lazyload.js([SOURCES.jquery, PAHTS.search_js], function() {
+  var search = (window.search || (window.search = {}));
+  var searchData = window.TEXT_SEARCH_DATA || {};
+
+  function memorize(f) {
+    var cache = {};
+    return function () {
+      var key = Array.prototype.join.call(arguments, ',');
+      if (key in cache) return cache[key];
+      else return cache[key] = f.apply(this, arguments);
+    };
+  }
+
+  /// search
+  function searchByQuery(query) {
+    var i, j, key, keys, cur, _title, result = {};
+    keys = Object.keys(searchData);
+    for (i = 0; i < keys.length; i++) {
+      key = keys[i];
+      for (j = 0; j < searchData[key].length; j++) {
+        cur = searchData[key][j], _title = cur.title;
+        if ((result[key] === undefined || result[key] && result[key].length < 4 )
+          && _title.toLowerCase().indexOf(query.toLowerCase()) >= 0) {
+          if (result[key] === undefined) {
+            result[key] = [];
+          }
+          result[key].push(cur);
+        }
+      }
+    }
+    return result;
+  }
+
+  var renderHeader = memorize(function(header) {
+    return $('<p class="search-result__header">' + header + '</p>');
+  });
+
+  var renderItem = function(index, title, url) {
+    return $('<li class="search-result__item" data-index="' + index + '"><a class="button" href="' + url + '">' + title + '</a></li>');
+  };
+
+  function render(data) {
+    if (!data) { return null; }
+    var $root = $('<ul></ul>'), i, j, key, keys, cur, itemIndex = 0;
+    keys = Object.keys(data);
+    for (i = 0; i < keys.length; i++) {
+      key = keys[i];
+      $root.append(renderHeader(key));
+      for (j = 0; j < data[key].length; j++) {
+        cur = data[key][j];
+        $root.append(renderItem(itemIndex++, cur.title, cur.url));
+      }
+    }
+    return $root;
+  }
+
+  // search box
+  var $result = $('.js-search-result'), $resultItems;
+  var lastActiveIndex, activeIndex;
+
+  function clear() {
+    $result.html(null);
+    $resultItems = $('.search-result__item'); activeIndex = 0;
+  }
+  function onInputNotEmpty(val) {
+    $result.html(render(searchByQuery(val)));
+    $resultItems = $('.search-result__item'); activeIndex = 0;
+    $resultItems.eq(0).addClass('active');
+  }
+
+  search.clear = clear;
+  search.onInputNotEmpty = onInputNotEmpty;
+
+  function updateResultItems() {
+    lastActiveIndex >= 0 && $resultItems.eq(lastActiveIndex).removeClass('active');
+    activeIndex >= 0 && $resultItems.eq(activeIndex).addClass('active');
+  }
+
+  function moveActiveIndex(direction) {
+    var itemsCount = $resultItems ? $resultItems.length : 0;
+    if (itemsCount > 1) {
+      lastActiveIndex = activeIndex;
+      if (direction === 'up') {
+        activeIndex = (activeIndex - 1 + itemsCount) % itemsCount;
+      } else if (direction === 'down') {
+        activeIndex = (activeIndex + 1 + itemsCount) % itemsCount;
+      }
+      updateResultItems();
+    }
+  }
+
+  // Char Code: 13  Enter, 37  ⬅, 38  ⬆, 39  ➡, 40  ⬇
+  $(window).on('keyup', function(e) {
+    var modalVisible = search.getModalVisible && search.getModalVisible();
+    if (modalVisible) {
+      if (e.which === 38) {
+        modalVisible && moveActiveIndex('up');
+      } else if (e.which === 40) {
+        modalVisible && moveActiveIndex('down');
+      } else if (e.which === 13) {
+        modalVisible && $resultItems && activeIndex >= 0 && $resultItems.eq(activeIndex).children('a')[0].click();
+      }
+    }
+  });
+
+  $result.on('mouseover', '.search-result__item > a', function() {
+    var itemIndex = $(this).parent().data('index');
+    itemIndex >= 0 && (lastActiveIndex = activeIndex, activeIndex = itemIndex, updateResultItems());
+  });
+});
+</script>
+</div></div>
+
+
+<script>(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    function scrollToAnchor(anchor, duration, callback) {
+      var $root = this;
+      $root.animate({ scrollTop: $(anchor).position().top }, duration, function() {
+        window.history.replaceState(null, '', window.location.href.split('#')[0] + anchor);
+        callback && callback();
+      });
+    }
+    $.fn.scrollToAnchor = scrollToAnchor;
+  });
+})();
+(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    function affix(options) {
+      var $root = this, $window = $(window), $scrollTarget, $scroll,
+        offsetBottom = 0, scrollTarget = window, scroll = window.document, disabled = false, isOverallScroller = true,
+        rootTop, rootLeft, rootHeight, scrollBottom, rootBottomTop,
+        hasInit = false, curState;
+
+      function setOptions(options) {
+        var _options = options || {};
+        _options.offsetBottom && (offsetBottom = _options.offsetBottom);
+        _options.scrollTarget && (scrollTarget = _options.scrollTarget);
+        _options.scroll && (scroll = _options.scroll);
+        _options.disabled !== undefined && (disabled = _options.disabled);
+        $scrollTarget = $(scrollTarget);
+        isOverallScroller = window.isOverallScroller($scrollTarget[0]);
+        $scroll = $(scroll);
+      }
+      function preCalc() {
+        top();
+        rootHeight = $root.outerHeight();
+        rootTop = $root.offset().top + (isOverallScroller ? 0 :  $scrollTarget.scrollTop());
+        rootLeft = $root.offset().left;
+      }
+      function calc(needPreCalc) {
+        needPreCalc && preCalc();
+        scrollBottom = $scroll.outerHeight() - offsetBottom - rootHeight;
+        rootBottomTop = scrollBottom - rootTop;
+      }
+      function top() {
+        if (curState !== 'top') {
+          $root.removeClass('fixed').css({
+            left: 0,
+            top: 0
+          });
+          curState = 'top';
+        }
+      }
+      function fixed() {
+        if (curState !== 'fixed') {
+          $root.addClass('fixed').css({
+            left: rootLeft + 'px',
+            top: 0
+          });
+          curState = 'fixed';
+        }
+      }
+      function bottom() {
+        if (curState !== 'bottom') {
+          $root.removeClass('fixed').css({
+            left: 0,
+            top: rootBottomTop + 'px'
+          });
+          curState = 'bottom';
+        }
+      }
+      function setState() {
+        var scrollTop = $scrollTarget.scrollTop();
+        if (scrollTop >= rootTop && scrollTop <= scrollBottom) {
+          fixed();
+        } else if (scrollTop < rootTop) {
+          top();
+        } else {
+          bottom();
+        }
+      }
+      function init() {
+        if(!hasInit) {
+          var interval, timeout;
+          calc(true); setState();
+          // run calc every 100 millisecond
+          interval = setInterval(function() {
+            calc();
+          }, 100);
+          timeout = setTimeout(function() {
+            clearInterval(interval);
+          }, 45000);
+          window.pageLoad.then(function() {
+            setTimeout(function() {
+              clearInterval(interval);
+              clearTimeout(timeout);
+            }, 3000);
+          });
+          $scrollTarget.on('scroll', function() {
+            disabled || setState();
+          });
+          $window.on('resize', function() {
+            disabled || (calc(true), setState());
+          });
+          hasInit = true;
+        }
+      }
+
+      setOptions(options);
+      if (!disabled) {
+        init();
+      }
+      $window.on('resize', window.throttle(function() {
+        init();
+      }, 200));
+      return {
+        setOptions: setOptions,
+        refresh: function() {
+          calc(true, { animation: false }); setState();
+        }
+      };
+    }
+    $.fn.affix = affix;
+  });
+})();
+(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    function toc(options) {
+      var $root = this, $window = $(window), $scrollTarget, $scroller, $tocUl = $('<ul class="toc toc--ellipsis"></ul>'), $tocLi, $headings, $activeLast, $activeCur,
+        selectors = 'h1,h2,h3', container = 'body', scrollTarget = window, scroller = 'html, body', disabled = false,
+        headingsPos, scrolling = false, hasRendered = false, hasInit = false;
+
+      function setOptions(options) {
+        var _options = options || {};
+        _options.selectors && (selectors = _options.selectors);
+        _options.container && (container = _options.container);
+        _options.scrollTarget && (scrollTarget = _options.scrollTarget);
+        _options.scroller && (scroller = _options.scroller);
+        _options.disabled !== undefined && (disabled = _options.disabled);
+        $headings = $(container).find(selectors).filter('[id]');
+        $scrollTarget = $(scrollTarget);
+        $scroller = $(scroller);
+      }
+      function calc() {
+        headingsPos = [];
+        $headings.each(function() {
+          headingsPos.push(Math.floor($(this).position().top));
+        });
+      }
+      function setState(element, disabled) {
+        var scrollTop = $scrollTarget.scrollTop(), i;
+        if (disabled || !headingsPos || headingsPos.length < 1) { return; }
+        if (element) {
+          $activeCur = element;
+        } else {
+          for (i = 0; i < headingsPos.length; i++) {
+            if (scrollTop >= headingsPos[i]) {
+              $activeCur = $tocLi.eq(i);
+            } else {
+              $activeCur || ($activeCur = $tocLi.eq(i));
+              break;
+            }
+          }
+        }
+        $activeLast && $activeLast.removeClass('active');
+        ($activeLast = $activeCur).addClass('active');
+      }
+      function render() {
+        if(!hasRendered) {
+          $root.append($tocUl);
+          $headings.each(function() {
+            var $this = $(this);
+            $tocUl.append($('<li></li>').addClass('toc-' + $this.prop('tagName').toLowerCase())
+              .append($('<a></a>').text($this.text()).attr('href', '#' + $this.prop('id'))));
+          });
+          $tocLi = $tocUl.children('li');
+          $tocUl.on('click', 'a', function(e) {
+            e.preventDefault();
+            var $this = $(this);
+            scrolling = true;
+            setState($this.parent());
+            $scroller.scrollToAnchor($this.attr('href'), 400, function() {
+              scrolling = false;
+            });
+          });
+        }
+        hasRendered = true;
+      }
+      function init() {
+        var interval, timeout;
+        if(!hasInit) {
+          render(); calc(); setState(null, scrolling);
+          // run calc every 100 millisecond
+          interval = setInterval(function() {
+            calc();
+          }, 100);
+          timeout = setTimeout(function() {
+            clearInterval(interval);
+          }, 45000);
+          window.pageLoad.then(function() {
+            setTimeout(function() {
+              clearInterval(interval);
+              clearTimeout(timeout);
+            }, 3000);
+          });
+          $scrollTarget.on('scroll', function() {
+            disabled || setState(null, scrolling);
+          });
+          $window.on('resize', window.throttle(function() {
+            if (!disabled) {
+              render(); calc(); setState(null, scrolling);
+            }
+          }, 100));
+        }
+        hasInit = true;
+      }
+
+      setOptions(options);
+      if (!disabled) {
+        init();
+      }
+      $window.on('resize', window.throttle(function() {
+        init();
+      }, 200));
+      return {
+        setOptions: setOptions
+      };
+    }
+    $.fn.toc = toc;
+  });
+})();
+/*(function () {
+
+})();*/
+</script><script>
+  /* toc must before affix, since affix need to konw toc' height. */(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  var TOC_SELECTOR = window.TEXT_VARIABLES.site.toc.selectors;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    var $window = $(window);
+    var $articleContent = $('.js-article-content');
+    var $tocRoot = $('.js-toc-root'), $col2 = $('.js-col-aside');
+    var toc;
+    var tocDisabled = false;
+    var hasSidebar = $('.js-page-root').hasClass('layout--page--sidebar');
+    var hasToc = $articleContent.find(TOC_SELECTOR).length > 0;
+
+    function disabled() {
+      return $col2.css('display') === 'none' || !hasToc;
+    }
+
+    tocDisabled = disabled();
+
+    toc = $tocRoot.toc({
+      selectors: TOC_SELECTOR,
+      container: $articleContent,
+      scrollTarget: hasSidebar ? '.js-page-main' : null,
+      scroller: hasSidebar ? '.js-page-main' : null,
+      disabled: tocDisabled
+    });
+
+    $window.on('resize', window.throttle(function() {
+      tocDisabled = disabled();
+      toc && toc.setOptions({
+        disabled: tocDisabled
+      });
+    }, 100));
+
+  });
+})();
+(function() {
+  var SOURCES = window.TEXT_VARIABLES.sources;
+  window.Lazyload.js(SOURCES.jquery, function() {
+    var $window = $(window), $pageFooter = $('.js-page-footer');
+    var $pageAside = $('.js-page-aside');
+    var affix;
+    var tocDisabled = false;
+    var hasSidebar = $('.js-page-root').hasClass('layout--page--sidebar');
+
+    affix = $pageAside.affix({
+      offsetBottom: $pageFooter.outerHeight(),
+      scrollTarget: hasSidebar ? '.js-page-main' : null,
+      scroller: hasSidebar ? '.js-page-main' : null,
+      scroll: hasSidebar ? $('.js-page-main').children() : null,
+      disabled: tocDisabled
+    });
+
+    $window.on('resize', window.throttle(function() {
+      affix && affix.setOptions({
+        disabled: tocDisabled
+      });
+    }, 100));
+
+    window.pageAsideAffix = affix;
+  });
+})();
+</script><script type="text/x-mathjax-config">
+	var _config = { tex2jax: {
+		inlineMath: [['$','$'], ['\\(','\\)']]
+	}};_config.TeX = { equationNumbers: { autoNumber: "all" } };MathJax.Hub.Config(_config);
+</script>
+<script type="text/javascript" src="https://unpkg.com/mathjax@2.7.4/unpacked/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
+
+    </div>
+    <script>(function () {
+  var $root = document.getElementsByClassName('root')[0];
+  if (window.hasEvent('touchstart')) {
+    $root.dataset.isTouch = true;
+    document.addEventListener('touchstart', function(){}, false);
+  }
+})();
+</script>
+  </body>
+</html>
+

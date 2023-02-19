@@ -1,10 +1,10 @@
 <!DOCTYPE html><html lang="en">
   <head><meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"><title>The Kelly Criterion: The concept, derivation, and application to trading - Nicholas Bartlett</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no"><title>Sports-Betting Arbitrage: The Simple Case - Nicholas Bartlett</title>
 
-<meta name="description" content="This is where the description would be.">
-<link rel="canonical" href="http://localhost:4000/2023/01/27/test-page.html"><link rel="alternate" type="application/rss+xml" title="Nicholas Bartlett" href="/feed.xml"><link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
+<meta name="description" content="Sports betting has become commonplace as of late. What is not commonplace, however, is an understanding of how sports betting works at a fundamental level. T...">
+<link rel="canonical" href="http://localhost:4000/sports-arb-simple"><link rel="alternate" type="application/rss+xml" title="Nicholas Bartlett" href="/feed.xml"><link rel="apple-touch-icon" sizes="180x180" href="/assets/apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
 <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
 <link rel="manifest" href="/assets/site.webmanifest">
@@ -274,26 +274,288 @@
               <div class="col-main cell cell--auto"><!-- start custom main top snippet -->
 
 <!-- end custom main top snippet -->
-<article itemscope itemtype="http://schema.org/Article"><div class="article__header"><header><h1>The Kelly Criterion: The concept, derivation, and application to trading</h1></header><span class="split-space">&nbsp;</span>
+<article itemscope itemtype="http://schema.org/Article"><div class="article__header"><header><h1>Sports-Betting Arbitrage: The Simple Case</h1></header><span class="split-space">&nbsp;</span>
           <a class="edit-on-github"
             title="Edit on Github"
-            href="https://github.com/NicholasBartlett/NicholasBartlett.github.io/tree/master/_posts/2023-01-27-test-page.md">
-            <i class="far fa-edit"></i></a></div><meta itemprop="headline" content="The Kelly Criterion: The concept, derivation, and application to trading"><div class="article__info clearfix"><ul class="left-col menu"><li>
+            href="https://github.com/NicholasBartlett/NicholasBartlett.github.io/tree/master/_posts/2023-01-27-sports-arb-simple.md">
+            <i class="far fa-edit"></i></a></div><meta itemprop="headline" content="Sports-Betting Arbitrage: The Simple Case"><div class="article__info clearfix"><ul class="left-col menu"><li>
               <a class="button button--secondary button--pill button--sm"
-                href="/archive.html?tag=FinMath">FinMath</a>
+                href="/archive.html?tag=Python">Python</a>
             </li><li>
               <a class="button button--secondary button--pill button--sm"
-                href="/archive.html?tag=Trading">Trading</a>
+                href="/archive.html?tag=Sports-Betting">Sports-Betting</a>
             </li></ul><ul class="right-col menu"><li><i class="far fa-calendar-alt"></i> <span>Jan 27, 2023</span>
             </li></ul></div><meta itemprop="author" content="Nicholas Bartlett"/><meta itemprop="datePublished" content="2023-01-27T00:00:00-06:00">
-    <meta itemprop="keywords" content="FinMath,Trading"><div class="js-article-content"><div class="layout--article"><!-- start custom article top snippet -->
+    <meta itemprop="keywords" content="Python,Sports-Betting"><div class="js-article-content"><div class="layout--article"><!-- start custom article top snippet -->
 
 <!-- end custom article top snippet -->
-<div class="article__content" itemprop="articleBody"><p>This is where the description would be.</p>
+<div class="article__content" itemprop="articleBody"><p>Sports betting has become commonplace as of late. What is not commonplace, however, is an understanding of how sports betting works at a fundamental level. This article seeks to illuminate the idea of arbitrage in sports markets, and along the way discuss concepts that are useful even to the casual sports-bettor. After discussing the mathematics behind it all, we implement our ideas in Python so that we can easily find and assess arbitrage opportunities.</p>
 
 <!--more-->
 
-<p>kellyyy.</p>
+<h3 id="overview">Overview</h3>
+
+<h4 id="what-are-we-looking-to-solve">What are we looking to solve?</h4>
+
+<p>We are looking to find and implement a formula that we can use to answer three questions:<br />
+  <strong>1)</strong> How do I know whether a profitable arbitrage is available?<br />
+  <strong>2)</strong> What bets to place in order to take advantage of it?<br />
+  <strong>3)</strong> How profitable will it be?</p>
+
+<p>To begin, let’s assume that we have gathered the best odds available for any given outcome – ideally across many books – and we organize them into a table such as the following:</p>
+
+\[\begin{array}{c c} 
+&amp; \begin{array}{c c c} \text{Bet }1 &amp; \text{Bet }2 &amp; \text{Bet }3 \\ \end{array} \\
+\begin{array}{c c c} \text{Team 1 wins} \\ \text{Tie} \\ \text{Team 2 wins} \end{array} &amp;
+\left[
+\begin{array}{c c c}
+-120 &amp;  &amp;  \\
+ &amp; +190 &amp;  \\
+ &amp;  &amp; +430
+\end{array}
+\right]
+\end{array} \notag\]
+
+<p>Clearly, there is only one “best odds” for each outcome, so we can always arrange our data into a format such as the table above. From here, we wish to determine whether there is some combination of bets that will guarantee us a positive profit.</p>
+
+<p class="info"><strong>Note:</strong> It must be said that we assume that the available bets cover all possible outcomes. We cannot construct an arbitrage if there are outcomes that we cannot bet on.</p>
+
+<h4 id="converting-odds-to-payouts">Converting Odds to Payouts</h4>
+
+<p>The first step is to convert the above odds into a more interpretable and mathematically-friendly form: payouts.</p>
+
+<p>A bet’s payout is simply the amount of money you will have if you bet <span>$</span>1 and you win. The formula is given by:</p>
+
+\[\text{Payout(Odds)}= \begin{cases}
+                    \frac{|\text{Odds}| + 100}{|\text{Odds}|}, &amp; \text{Odds are -} \\
+                    \frac{|\text{Odds}| + 100}{100}, &amp; \text{Odds are +}
+                     \end{cases}.
+                     \notag\]
+
+<p>Thus, for example, if a bet is $-200$ then payout is $1.5$ which corresponds to a $50\%$ return if the bet is a success. With this, we can more easily use math to help us find the optimal formula.</p>
+
+<h3 id="the-arbitrage-formula">The Arbitrage Formula</h3>
+
+<p>In this section, we will derive a general formula for an arbitrage portfolio that pays equally across all outcomes using basic linear algebra. The math helps us derive the answer in this section, but in the next section we will connect it more intuitively to financial concepts.</p>
+
+<h4 id="notation">Notation</h4>
+
+<p>Let $A \in \mathbb{R}^{n \times n}$ be the matrix containing the payouts for each of the $n$ outcomes. Just like above, the columns of $A$ represent the books, and the rows represent each outcome. Similarly, we restrict ourselves to the case where a single bet corresponds to a single outcome – meaning that we can’t have a bet that wins in multiple outcomes – and we only ever want to look at the most favorable odds available for each outcome. Thus we know that $A$ will be square (there is only 1 best payout per outcome), and furthermore $A$ takes the form</p>
+
+\[\begin{align*}
+
+A = \text{diag}(\vec a),
+
+\end{align*}\]
+
+<p>where $\vec a \in \mathbb{R}^n$, and $a_i&gt;1$ are the payouts of the $i$th outcome. The $0$’s in the non-diagonal entries of $A$ represent the fact that if the given bet doesn’t succeed then it pays out $0$. We let $\vec{w} \in \mathbb{R}^n$ denote the weighting of our “portfolio” of bets, and we require that this sums to one.</p>
+
+<h4 id="deriving-the-formula">Deriving The Formula</h4>
+
+<p>In order to construct an arbitrage that has equal payouts over every outcome, we simply want to find $\vec w$ and some constant scalar $k$ such that the following is satisfied:</p>
+
+\[\begin{align}
+
+A\vec w = \vec 1 k,\\
+\vec 1^\intercal \vec w = 1,
+
+\end{align}\]
+
+<p>Clearly, because a ${$1}$ portfolio will turn into ${$k}$ in every outcome, then if $k&gt;1$ then we have a profitable arbitrage. Because $A$ is always invertible, we solve $(1)$ as</p>
+
+\[\vec w = k A^{-1}\vec 1 \notag\]
+
+<p>and we can plug this into $(2)$ to find</p>
+
+\[k = (\vec 1^\intercal A^{-1} \vec 1)^{-1}.\]
+
+<p>To finish, we then have that</p>
+
+\[\vec w = \frac{A^{-1}\vec 1}{\vec 1^\intercal A^{-1} \vec 1}\]
+
+<p>gives us our arbitrage betting formula.</p>
+
+<h3 id="a-more-intuitive-look">A More Intuitive Look</h3>
+
+<h4 id="implied-risk-neutral-probability">Implied (Risk-Neutral) Probability</h4>
+
+<p>It isn’t necessarily easy to garner intuition of the formula for $\vec w$ at first glance, but by shifting our perspective we can shed some light. First, we must discuss implied (more formally referred to as “risk-neutral”) probabilities. Put simply, it is the probability that the betting market has baked into the current odds (or that your sportsbook has set). If an outcome has probability $p$ of occurring, and it pays out $a$, then by placing a ${$1}$ bet on that outcome we have an expected profit of</p>
+
+\[E[\text{Profit}] = p \cdot (a-1) + (1-p) \cdot (-1) \notag\]
+
+<p>If this is positive, then people will keep betting on this side until that is no longer the case. If its negative, people will bet on the other side until that is no longer the case. We find balance only when $E[\text{Profit}]=0$, and thus if the current odds/payout are given by $a$ then the market (on aggregate) views the probability of the outcome to be the value of $p$ such that</p>
+
+\[E[\text{Profit}] = p \cdot (a-1) + (1-p) \cdot (-1)=0 \notag \\
+\implies p=\frac 1a.\]
+
+<h4 id="the-simplified-formula">The Simplified Formula</h4>
+
+<p>Using this idea, we can re-write our derivation above in terms of implied probabilities – replace the $a$’s with $\frac 1p$’s. Then because $A$ is diagonal we have $A=P^{-1}$ where $P \in \mathbb{R}^n$ is a diagonal matrix representing the risk-neutral probabilities (prices) of each bet. With this,</p>
+
+\[\vec w = \frac{P\vec 1}{\vec 1^\intercal P \vec 1},\]
+
+<p>and if we let $\vec p$ denote the diagonal of $P$ just as we let $\vec a$ denote the diagonal of $A$, we can simplify further to get</p>
+
+\[\vec w = \frac{\vec p}{\text{sum}(\vec p)}.\]
+
+<p>In other words, the proper weightings are the implied probabilities scaled so that the weights sum to one! Furthermore, our profit is $k=\frac{1}{\text{sum}(\vec p)}$, meaning that we have a profitable arbitrage if the sum of the implied probabilities is less than one.</p>
+
+<h4 id="why-is-this-so">Why Is This So?</h4>
+
+<p>As an example, consider a situation where there are only two bets: $\text{outcome 1}$ has an implied probability of $55\%$ and $\text{outcome 2}$ has an implied probability of $52\%$. There are only two outcomes but their probabilities add up to more than $100\%$! This may be the case because the sportsbooks need to make money and they do so by offering slightly unfavorable bets on all sides. By doing so, the odds are so unfavorable that no profitable arbitrage is possible. You can, however, lock in a sure loss by using the formula for $\vec w$.</p>
+
+<p>If we consider an asset that pays ${$1}$ if the outcome happens and ${$0}$ if it does not, then it is not difficult to see that the implied probability <em>is</em> the market price. So if I pay $55$ cents and $52$ cents for the assets corresponding to $\text{outcomes 1}$ and $2$ respectively, then no matter what happens I paid ${$1.07}$ and won ${$1}$ – a sure loss.</p>
+
+<p>Now consider if $\text{outcome 1}$ has an implied probability of $55\%$ and $\text{outcome 2}$ has an implied probability of $43\%$. Now, I can pay $55$ cents and $43$ cents respectively, meaning I paid $98$ cents and I always get ${$1}$ – a sure profit. That is why we need $\text{sum}(\vec p)&lt;1$ for a profitable arbitrage.</p>
+
+<p class="warning"><strong>Warning:</strong> For the active sports bettors out there, this is why its typically not a great idea to make many conflicting bets at the same time – 99.99% of the time the odds offered by the sportsbook leave absolutely no room for a profitable arbitrage-like situation. Instead, you’re far more likely to lock yourself into a losing situation. It is incredibly easy to make a few bets on the same game that contradict each other in subtle ways, and by doing so you are simply decreasing the variance of your outcome. Given how unfavorable the odds usually are, particularly if you make these bets all on the same sportsbook, you are almost certain to lose money.</p>
+
+<h4 id="calculating-the-implied-probability-from-the-odds">Calculating the Implied Probability From the Odds</h4>
+
+<p>Although this formula follows directly from the discussion above, it is useful to highlight exactly how we can calculate the implied probabilities from the odds. Although some sportsbooks offer this in their app, for those that don’t it is incredibly powerful to understand the odds from a probability perspective. The formula is:</p>
+
+\[\text{Implied Probability(Odds)}= \begin{cases}
+                    \frac{|\text{Odds}|}{|\text{Odds}|+100}, &amp; \text{Odds are -} \\
+                    \frac{100}{|\text{Odds}| + 100}, &amp; \text{Odds are +}
+                     \end{cases}.
+                     \notag\]
+
+<p class="info"><strong>Note:</strong> If you sportsbet frequently, you should memorize this formula.</p>
+
+<h3 id="python-implementation">Python Implementation</h3>
+
+<p>In this section, we will briefly walk through Python code that can be used to quickly and easily calculate the arbitrage bets, if any exist. First, we will implement some functions to calculate what we discussed above, and then we will create a function that combines everything into one. We will demonstrate with a brief example.</p>
+
+<h4 id="the-basic-functions">The Basic Functions</h4>
+
+<p>After we <code class="language-plaintext highlighter-rouge">import numpy as np</code>, our first step is to implement a function that converts sportsbook odds to implied probabilities as previously discussed. This is done as follows:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">odd_to_price</span><span class="p">(</span><span class="n">odd</span><span class="p">):</span>
+    <span class="s">'''
+    Converts a sportsbook's odds to implied probability/price.
+    '''</span>
+    
+    <span class="k">if</span> <span class="n">odd</span> <span class="o">&gt;=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">100</span> <span class="o">/</span> <span class="p">(</span><span class="mi">100</span> <span class="o">+</span> <span class="n">odd</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="o">-</span><span class="n">odd</span> <span class="o">/</span> <span class="p">(</span><span class="mi">100</span> <span class="o">-</span> <span class="n">odd</span><span class="p">)</span>
+
+    
+<span class="k">def</span> <span class="nf">odds_to_prices</span><span class="p">(</span><span class="n">odds</span><span class="p">):</span>
+    <span class="s">'''
+    Converts a matrix of sportsbook odds to implied probabilities/prices.
+    '''</span>
+    <span class="k">return</span> <span class="n">np</span><span class="p">.</span><span class="n">vectorize</span><span class="p">(</span><span class="n">odd_to_price</span><span class="p">)(</span><span class="n">odds</span><span class="p">)</span>
+</code></pre></div></div>
+
+<p>Second, we want to implement our calculations for the arbitrage weights in the form of equation $(6)$. The <code class="language-plaintext highlighter-rouge">notional</code> parameter refers to the total amount of money you want to bet. Also, if there is no profitable arb available, the function returns nothing.</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">calculate_simple_arb</span><span class="p">(</span><span class="n">p_vec</span><span class="p">,</span> <span class="n">notional</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="s">'''
+    Given the p-vector holding the implied probalities for each outcome, calculate the arbitrage.
+    '''</span>
+    
+    <span class="c1"># Calculate our constant k
+</span>    <span class="n">k</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">p_vec</span><span class="p">.</span><span class="nb">sum</span><span class="p">()</span>
+    
+    <span class="c1"># No need to calculate the weightings if the arb wouldn't be profitable
+</span>    <span class="k">if</span> <span class="n">k</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"No profitable arb available, return is: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s">%"</span><span class="p">)</span>
+        <span class="k">return</span>
+    
+    <span class="c1"># Print the profitability
+</span>    <span class="k">print</span><span class="p">(</span><span class="sa">f</span><span class="s">"Arb return: </span><span class="si">{</span><span class="nb">round</span><span class="p">(</span><span class="mi">100</span> <span class="o">*</span> <span class="p">(</span><span class="n">k</span> <span class="o">-</span> <span class="mi">1</span><span class="p">),</span> <span class="mi">2</span><span class="p">)</span><span class="si">}</span><span class="s">%"</span><span class="p">)</span>
+    
+    <span class="c1"># Calculate our weights
+</span>    <span class="n">w_vec</span> <span class="o">=</span> <span class="n">p_vec</span> <span class="o">*</span> <span class="n">k</span>
+    
+    <span class="c1"># Convert this to a $ amount bet placed
+</span>    <span class="n">bets</span> <span class="o">=</span> <span class="n">w_vec</span> <span class="o">*</span> <span class="n">notional</span>
+    
+    <span class="k">return</span> <span class="n">bets</span>
+</code></pre></div></div>
+
+<p>Now, given our odds, we can calculate $\vec p$ and then $\vec w$!</p>
+
+<h4 id="putting-it-all-together-in-a-more-useful-way">Putting it all together in a more useful way</h4>
+
+<p>We can put the above functions together in such a way that makes discovering arbitrage much easier. Consider if we have some bet with $n$ outcomes and we have $b$ different sportsbooks. We can then gather all of the odds data and arrange it into a $n \times b$ matrix such as:</p>
+
+\[\begin{array}{c c} 
+&amp; \begin{array}{c c c} \text{Book }1 &amp; \text{Book }2 &amp; \text{Book }3 &amp; \text{Book }4\\ \end{array} \\
+\begin{array}{c c c} \text{Team 1 wins} \\ \text{Tie} \\ \text{Team 2 wins} \end{array} &amp;
+\left[
+\begin{array}{c c c}
+\; -120 \; &amp; \; -105 \; &amp; \; -125 \; &amp; \; +110 \; \\
++190 &amp; +175 &amp; +230 &amp; +140 \\
++430 &amp; +515 &amp; +300 &amp; +850
+\end{array}
+\right]
+\end{array} \notag\]
+
+<p>From here, we can automatically:<br />
+  <strong>1)</strong> Find the best prices for each outcome.<br />
+  <strong>2)</strong> Automate the arbitrage calculations.<br />
+  <strong>3)</strong> Return a matrix of the same size that tells us exactly where to bet, and how much.</p>
+
+<p>The code is:</p>
+
+<div class="language-python highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="k">def</span> <span class="nf">find_best_prices</span><span class="p">(</span><span class="n">prices</span><span class="p">):</span>
+    <span class="s">'''
+    Finds the best odds from each book, returns it as an array, and also returns the book indices.
+    '''</span>
+    
+    <span class="k">return</span> <span class="n">prices</span><span class="p">.</span><span class="nb">min</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">),</span> <span class="n">prices</span><span class="p">.</span><span class="n">argmin</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+
+<span class="k">def</span> <span class="nf">simple_arb_from_all_odds</span><span class="p">(</span><span class="n">odds</span><span class="p">,</span> <span class="n">notional</span><span class="o">=</span><span class="mi">100</span><span class="p">):</span>
+    <span class="s">'''
+    Given a rectangular matrix that has all of the odds available for each sportsbook/outcome combination, this function:
+    1) finds the best prices/odds for each outcome
+    2) calculates the arb weights
+    3) returns a corresponding matrix saying exactly how much to bet on each sportsbook/outcome combination 
+    '''</span>
+    
+    <span class="c1"># First convert the odds to prices
+</span>    <span class="n">prices</span> <span class="o">=</span> <span class="n">odds_to_prices</span><span class="p">(</span><span class="n">odds</span><span class="p">)</span>
+    
+    <span class="c1"># Find the best odds for each outcome, and store which book it came from
+</span>    <span class="n">p_vec</span><span class="p">,</span> <span class="n">books</span> <span class="o">=</span> <span class="n">find_best_prices</span><span class="p">(</span><span class="n">prices</span><span class="p">)</span>
+    
+    <span class="c1"># Calculate the arb bets, if any
+</span>    <span class="n">bets</span> <span class="o">=</span> <span class="n">calculate_simple_arb</span><span class="p">(</span><span class="n">p_vec</span><span class="p">,</span> <span class="n">notional</span><span class="p">)</span>
+    
+    <span class="c1"># If no arb, return None
+</span>    <span class="k">if</span> <span class="n">bets</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="k">return</span>
+    
+    <span class="c1"># The matrix specifying exactly where to bet. We first initialize it to be zeros.
+</span>    <span class="n">bet_matrix</span> <span class="o">=</span> <span class="n">np</span><span class="p">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">odds</span><span class="p">.</span><span class="n">shape</span><span class="p">)</span>
+    
+    <span class="c1"># Loop through each outcome, mark which sportsbook/bet combo we need to place our bet on, and how much the bet will be.
+</span>    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="p">(</span><span class="n">bet</span><span class="p">,</span> <span class="n">book</span><span class="p">)</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">bets</span><span class="p">,</span> <span class="n">books</span><span class="p">)):</span>
+        
+        <span class="n">bet_matrix</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">book</span><span class="p">]</span> <span class="o">=</span> <span class="n">bet</span>
+    
+    <span class="k">return</span> <span class="n">bet_matrix</span>
+</code></pre></div></div>
+
+<p>Continuing from the example above, if we wanted to bet <span>$</span>100 then the output would be</p>
+
+\[\begin{array}{c c} 
+&amp; \begin{array}{c c c} \text{Book }1 &amp; \text{Book }2 &amp; \text{Book }3 &amp; \text{Book }4\\ \end{array} \\
+\begin{array}{c c c} \text{Team 1 wins} \\ \text{Tie} \\ \text{Team 2 wins} \end{array} &amp;
+\left[
+\begin{array}{c c c}
+\;\;\; $0 \;\;\; &amp; \;\;\; $0 \;\;\; &amp; \; $0 \; &amp; $53.84 \\
+\; $0 \; &amp; \; $0 \; &amp; $34.26 &amp; \; $0 \; \\
+\; $0 \; &amp; \; $0 \; &amp; \; $0 \; &amp; $11.90
+\end{array}
+\right]
+\end{array} \notag\]
+
+<p>and the return from this arbitrage would amount to $13.06\%$. Thus, we would bet ${$34.26}$ on $\text{Book 3}$ for a $\text{Tie}$, ${$53.84}$ on $\text{Book 4}$ for $\text{Team 1}$ to win, and ${$11.90}$ on $\text{Book 4}$ for $\text{Team 3}$ to win.</p>
+
+<p class="info"><strong>Note:</strong> Arbitrages of the nature seen in this article are exceedingly rare and typically quite small. For the more complex arbitrage opportunities which are more prevalent, consider reading <a href="/sports-arb-linprog">this article</a> to learn how to capture them.</p>
 </div><section class="article__sharing d-print-none"></section><div class="d-print-none"><footer class="article__footer"><meta itemprop="dateModified" content="2023-01-27T00:00:00-06:00"><!-- start custom article footer snippet -->
 
 <!-- end custom article footer snippet -->
@@ -305,7 +567,7 @@
       </a>
     </p>
   </div></div></footer>
-<div class="article__section-navigator clearfix"><div class="previous"><span>PREVIOUS</span><a href="/2023/01/27/sports-arb-simple.html">Sports-Betting Arbitrage: The simple case</a></div></div></div>
+<div class="article__section-navigator clearfix"><div class="next"><span>NEXT</span><a href="/sports-arb-linprog">Sports-Betting Arbitrage: Complex Arbitrage Through Linear Programming</a></div></div></div>
 
 </div>
 
@@ -943,7 +1205,7 @@ window.Lazyload.js([SOURCES.jquery, PAHTS.search_js], function() {
 </script><script type="text/x-mathjax-config">
 	var _config = { tex2jax: {
 		inlineMath: [['$','$'], ['\\(','\\)']]
-	}};MathJax.Hub.Config(_config);
+	}};_config.TeX = { equationNumbers: { autoNumber: "all" } };MathJax.Hub.Config(_config);
 </script>
 <script type="text/javascript" src="https://unpkg.com/mathjax@2.7.4/unpacked/MathJax.js?config=TeX-MML-AM_CHTML" async></script>
 
