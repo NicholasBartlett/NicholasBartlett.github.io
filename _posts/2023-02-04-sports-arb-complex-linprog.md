@@ -1,6 +1,6 @@
 ---
 layout: article
-title: "Sports-Betting Arbitrage: Complex Arbitrage Through Linear Programming"
+title: "Sports-Betting Arbitrage: Complex Arbitrage Through Linear/Quadratic Programming"
 tags: Python Sports-Betting Optimization Numerical-Methods
 permalink: sports-arb-linprog
 mathjax: true

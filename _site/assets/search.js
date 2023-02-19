@@ -1,1 +1,1 @@
-window.TEXT_SEARCH_DATA={'posts':[{'title':"Sports-Betting Arbitrage: The Simple Case",'url':"/sports-arb-simple"},{'title':"Sports-Betting Arbitrage: Complex Arbitrage Through Linear Programming",'url':"/sports-arb-linprog"}]};
+window.TEXT_SEARCH_DATA={'posts':[{'title':"Sports-Betting Arbitrage: The Simple Case",'url':"/sports-arb-simple"},{'title':"Sports-Betting Arbitrage: Complex Arbitrage Through Linear/Quadratic Programming",'url':"/sports-arb-linprog"}]};
